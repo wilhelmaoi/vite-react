@@ -4,15 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d868dc57-46c8-494b-9503-2d3f59d8b1a9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../web-next/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/../web-next/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../web-next/src/components/navbar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../web-next/src/components/navbar.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../web-next/src/layouts/default.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../web-next/src/layouts/default.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../web-next/src/pages/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../web-next/src/pages/index.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="d868dc57-46c8-494b-9503-2d3f59d8b1a9" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
