@@ -17,10 +17,10 @@ export default function IndexPage() {
           <span className={title()}>OTE&nbsp;</span>
           <br />
           <span className={title()}>
-            websites regardless of your design experience.
+            一个帮助你达成任务目标的多功能社区
           </span>
           <div className={subtitle({ class: "mt-4" })}>
-            Beautiful, fast and modern React UI library.
+            这里有最新的大语言模型帮助你规划，活跃的“同好社区”，一键上传下载任务模板
           </div>
         </div>
 
@@ -34,7 +34,7 @@ export default function IndexPage() {
             })}
             href={siteConfig.links.docs}
           >
-            Documentation
+            开始
           </Link>
           <Link
             isExternal
