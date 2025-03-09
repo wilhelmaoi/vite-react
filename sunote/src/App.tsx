@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
 import { Navigation } from './navigation';
 import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper'; // 导入 PaperProvider
+import database from "./database" // Removed because the module is missing
 
 Asset.loadAsync([
   ...NavigationAssets,
