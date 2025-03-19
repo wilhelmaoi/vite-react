@@ -12,10 +12,6 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.wilhelmaoi.sunotedemo"
     },
     "web": {
@@ -31,6 +27,12 @@
         }
       ],
       "react-native-edge-to-edge"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2c9d818d-2815-4572-875c-ce54139dec24"
+      }
+    },
+    "owner": "wilhelmaoi"
   }
 }

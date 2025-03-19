@@ -3,8 +3,13 @@ import { Asset } from 'expo-asset';
 import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
 import { Navigation } from './navigation';
-import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper'; // 导入 PaperProvider
-import database from "./database" // Removed because the module is missing
+import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { useColorScheme } from 'react-native';
+import {
+  NavigationContainer,
+  DefaultTheme,
+  DarkTheme,
+} from '@react-navigation/native';
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -14,28 +19,28 @@ Asset.loadAsync([
 
 SplashScreen.preventAutoHideAsync();
 
-const theme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: '#3498db', // 你可以自定义主题颜色
-  },
-};
-
 export function App() {
+  const scheme = useColorScheme();
+  // const paperTheme = scheme === 'dark' ? MD3DarkTheme : MD3LightTheme;
+  const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
+
   return (
-    <PaperProvider theme={theme}>
-      <Navigation
-        linking={{
-          enabled: 'auto',
-          prefixes: [
-            'helloworld://',
-          ],
-        }}
-        onReady={() => {
-          SplashScreen.hideAsync();
-        }}
-      />
+    // <PaperProvider theme={navigationTheme}>
+      <PaperProvider>
+      {/* Ensure NavigationContainer is only used once at the root */}
+        <Navigation
+          theme={navigationTheme}
+          linking={{
+            enabled: 'auto',
+            prefixes: [
+              'helloworld://',
+            ],
+          }}
+          onReady={() => {
+            SplashScreen.hideAsync();
+          }}
+        >
+      </Navigation>
     </PaperProvider>
   );
 }

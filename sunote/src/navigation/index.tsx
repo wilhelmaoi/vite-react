@@ -16,6 +16,7 @@ import { Profile } from './screens/Profile';
 import { Settings } from './screens/Settings';
 import { Updates } from './screens/Updates';
 import { NotFound } from './screens/NotFound';
+import { Mine } from './screens/Mine';
 import { TransitionSpecs } from '@react-navigation/bottom-tabs';
 
 const HomeTabs = createBottomTabNavigator({
@@ -69,7 +70,25 @@ const HomeTabs = createBottomTabNavigator({
           </Animatable.View>
         ),
       },
-  },}
+    },
+  Mine: {
+    screen: Mine,
+    options: {
+      title: '我的',
+      transitionSpec: TransitionSpecs.FadeSpec,
+      tabBarIcon: ({ color, size }) => (
+        <Image
+          source={newspaper}
+          tintColor={color}
+          style={{
+            width: size,
+            height: size,
+          }}
+        />
+      ),
+    },
+  },
+  }
 
 });
 
