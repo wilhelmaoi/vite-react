@@ -1,14 +1,14 @@
 import { Platform } from 'react-native'
 import { Database } from '@nozbe/watermelondb'
 import SQLiteAdapter from '@nozbe/watermelondb/adapters/sqlite'
-
-import schema from '../model/schema'
-import migrations from '../model/migrations'
+import User from './model';
+import Schema from './schema'
+import migrations from './migrations'
 // import Post from '../model/Post' // 你后续可以添加 Model
 
 // 创建 WatermelonDB 适配器
 const adapter = new SQLiteAdapter({
-schema,
+  schema: Schema,
   // （你可能想在开发过程中将其注释掉 -- 参见迁移文档）
   migrations,
   // （可选的数据库名称或文件系统路径）
@@ -30,6 +30,7 @@ schema,
 const database = new Database({
   adapter,
   modelClasses: [
+    User
     // Post, // 你后续可以添加 Model
   ],
 })
