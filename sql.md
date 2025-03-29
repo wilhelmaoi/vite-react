@@ -9,9 +9,11 @@
 | `id`        | BIGINT (PK)      | 用户唯一 ID，自增主键 |
 | `username`  | VARCHAR(50) UNIQUE NOT NULL | 用户名，唯一，不可为空 |
 | `email`     | VARCHAR(100) UNIQUE NOT NULL | 电子邮件，唯一，不可为空 |
-| `password_hash` | VARCHAR(255) NOT NULL | 用户密码的哈希值 |
+| `password` | VARCHAR(255) NOT NULL | 用户密码 |
 | `avatar_url` | VARCHAR(255)  | 用户头像 URL |
 | `bio`       | TEXT           | 个人简介 |
+| `birthday` | VARCHAR(255)  | 用户生日 |
+| `address` | VARCHAR(255)  | 用户住址 |
 | `created_at` | TIMESTAMP DEFAULT CURRENT_TIMESTAMP | 账号创建时间 |
 | `updated_at` | TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP | 账号更新时间 |
 

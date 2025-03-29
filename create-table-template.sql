@@ -1,13 +1,29 @@
 CREATE TABLE users (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    avatar_url VARCHAR(255),
+    password VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    avatar VARCHAR(255),
     bio TEXT,
+    address VARCHAR(255),
+    birthday DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+
+ALTER TABLE users 
+ADD COLUMN address VARCHAR(255),
+ADD COLUMN birthday DATE,
+ADD COLUMN password VARCHAR(255) NOT NULL;
+
+
+/* ADD COLUMN phone VARCHAR(20) UNIQUE NOT NULL, */
+/* CHANGE COLUMN password_hash password VARCHAR(255) NOT NULL; */
+
+
+
 
 CREATE TABLE friends (
     user_id BIGINT NOT NULL,
