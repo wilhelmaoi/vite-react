@@ -1,5 +1,5 @@
 {
-  "extends": "expo/tsconfig.base",
+  "extends": "./node_modules/expo/tsconfig.base",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -10,7 +10,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }  
-  },
-  "include": ["src", "node_modules/expo"]
+    }
+  }
 }

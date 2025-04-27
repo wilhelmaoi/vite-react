@@ -6,6 +6,7 @@ import { Navigation } from './components';
 import { SignIn } from './components/sign/SignIn';
 import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { useColorScheme } from 'react-native';
+import { AuthProvider } from './context/GlobalContext(Deprecated)';
 import { useAuthStore } from './context/store';
 import { getToken } from './context/secureStore'; // SecureStore相关
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
