@@ -86,9 +86,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.wilhelmaoi.sunote'
+    namespace 'com.wilhelmaoi.sunotedemo'
     defaultConfig {
-        applicationId 'com.wilhelmaoi.sunote'
+        applicationId 'com.wilhelmaoi.sunotedemo'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

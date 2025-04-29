@@ -1,4 +1,4 @@
-package com.wilhelmaoi.sunote
+package com.wilhelmaoi.sunotedemo
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

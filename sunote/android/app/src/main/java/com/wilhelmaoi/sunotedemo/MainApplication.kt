@@ -1,4 +1,4 @@
-package com.wilhelmaoi.sunote
+package com.wilhelmaoi.sunotedemo
 
 import android.app.Application
 import android.content.res.Configuration
