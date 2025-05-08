@@ -1,150 +1,97 @@
+// components/index.tsx
+import React from 'react';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HeaderButton, Text } from '@react-navigation/elements';
-import {
-  createStaticNavigation,
-  StaticParamList,
-} from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Image } from 'react-native';
-import bell from '../assets/bell.png';
 import { MaterialIcons } from '@expo/vector-icons';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import newspaper from '../assets/newspaper.png';
+import { Image } from 'react-native';
+
 import { Home } from './screens/Home';
-import { Community } from './screens/Community';
-import { Profile } from './screens/Profile';
-import { Settings } from './screens/Settings';
-import { Updates } from './screens/Updates';
-import { NotFound } from './screens/NotFound';
-import { Mine } from './screens/Mine';
+import { Community } from '@/components/screens/Community';
+import { Updates } from '@/components/screens/Updates';
+import { Mine } from '@/components/screens/Mine';
+// import { Profile } from '@/components/screens/Profile';
+import { Settings } from '@/components/screens/Settings';
+import { NotFound } from '@/components/screens/NotFound';
+import newspaper from '../assets/newspaper.png';
 import { SignIn } from './sign/SignIn';
-import { TransitionSpecs } from '@react-navigation/bottom-tabs';
+import { RootStackParamList } from '@/screen';
 
-const HomeTabs = createBottomTabNavigator({
-  screens: {
-   
-    Home: {
-      screen: Home,
-      options: {
-        title: '首页',
-        transitionSpec: TransitionSpecs.FadeSpec,
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={newspaper}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
-      },
-    },
-    Community: {
-      screen: Community,
-      options: {
-        title: '社区',
-        transitionSpec: TransitionSpecs.FadeSpec,
-        tabBarIcon: ({ color, size }) => (
-          <Image
-            source={newspaper}
-            tintColor={color}
-            style={{
-              width: size,
-              height: size,
-            }}
-          />
-        ),
-      },
-    },
-    Updates: {
-      screen: Updates,
-      options: {
-        title: '通知',
-        transitionSpec: TransitionSpecs.FadeSpec,
-        tabBarIcon: ({ color, size }) => (
-       <MaterialIcons name="notifications" size={size} color={color} />
-        ),
-      },
-    },
-  Mine: {
-    screen: Mine,
-    options: {
-      title: '我的',
-      transitionSpec: TransitionSpecs.FadeSpec,
-      tabBarIcon: ({ color, size }) => (
-        <Image
-          source={newspaper}
-          tintColor={color}
-          style={{
-            width: size,
-            height: size,
-          }}
-        />
-      ),
-    },
-  },
-  }
+type Props = NativeStackScreenProps<RootStackParamList>;
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-});
 
-const RootStack = createNativeStackNavigator({
-  screens: {
-    SignIn: {
-      screen: SignIn,
-      options: {
-        headerShown: false,
-      },
-    },
-    HomeTabs: {
-      screen: HomeTabs,
-      options: {
-        title: 'Home',
-        headerShown: false,
-        
-      },
-    },
-    Profile: {
-      screen: Profile,
-      linking: {
-        path: ':user(@[a-zA-Z0-9-_]+)',
-        parse: {
-          user: (value) => value.replace(/^@/, ''),
-        },
-        stringify: {
-          user: (value) => `@${value}`,
-        },
-      },
-    },
-    Settings: {
-      screen: Settings,
-      options: ({ navigation }) => ({
-        presentation: 'modal',
-        headerRight: () => (
-          <HeaderButton onPress={navigation.goBack}>
-            <Text>Close</Text>
-          </HeaderButton>
-        ),
-      }),
-    },
-    NotFound: {
-      screen: NotFound,
-      options: {
-        title: '404',
-      },
-      linking: {
-        path: '*',
-      },
-    },
-  },
-});
 
-export const Navigation = createStaticNavigation(RootStack);
+function Tabs() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          title: '首页',
+          tabBarIcon: ({ color, size }) => (
+            <Image source={newspaper} style={{ width: size, height: size, tintColor: color }} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Community"
+        component={Community}
+        options={{
+          title: '社区',
+          tabBarIcon: ({ color, size }) => (
+            <Image source={newspaper} style={{ width: size, height: size, tintColor: color }} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Updates"
+        component={Updates}
+        options={{
+          title: '通知',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="notifications" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Mine"
+        component={Mine}
+        options={{
+          title: '我的',
+          tabBarIcon: ({ color, size }) => (
+            <Image source={newspaper} style={{ width: size, height: size, tintColor: color }} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
 
-type RootStackParamList = StaticParamList<typeof RootStack>;
+export const AppStack: React.FC<Props> =  ({ navigation }) =>{
+  React.useEffect(() => {
+    console.log('当前进入index界面');
+  }, []);
 
-declare global {
-  namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
-  }
+
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="Settings"
+        component={Settings}
+        options={({ navigation }) => ({
+          presentation: 'modal',
+          headerRight: () => (
+            <MaterialIcons name="close" size={24} onPress={() => navigation.goBack()} />
+          ),
+        })}
+      />
+      <Stack.Screen name="NotFound" component={NotFound} />
+      <Stack.Screen name="SignIn" component={SignIn} />
+  </Stack.Navigator>
+  );
 }

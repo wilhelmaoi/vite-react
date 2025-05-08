@@ -1,19 +1,12 @@
-// src/components/sign/SignIn.tsx
+// app/index.tsx
 import React, { useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { TextInput, Button, Text, useTheme } from 'react-native-paper';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAuthStore } from '@/context/store';
-import {
-  createStaticNavigation,
-  useNavigation,
-} from '@react-navigation/native';
-import { saveToken, saveAccount, savePassword, getAccount, getPassword } from '@/context/secureStore'; // SecureStore相关
-import request from '@/database/request';
-import { RootStackParamList } from '@/screen';
+import { useAuthStore } from '../src/context/store';
 
-type Props = NativeStackScreenProps<RootStackParamList>;
+import { saveToken, saveAccount, savePassword, getAccount, getPassword } from '../src/context/secureStore'; // SecureStore相关
+import request from '../src/database/request';
+import { Link,useRouter } from 'expo-router';
 
 // 登录成功后的处理
 async function onLoginSuccess(token: string, username: string, password: string) {
@@ -27,8 +20,9 @@ async function onLoginSuccess(token: string, username: string, password: string)
   await savePassword(password);
 }
 
-export const SignIn: React.FC<Props> = ({ navigation }) => {
+export default function SignIn() {
 
+  const router = useRouter();
   const theme = useTheme();
   
   // 从store拿状态
@@ -63,8 +57,12 @@ export const SignIn: React.FC<Props> = ({ navigation }) => {
       // console.log('response', response);
       // console.log('登录成功', code, msg,token);
       if (code === 200 && token) {
+        console.log('token获取成功', token);
         await onLoginSuccess(token, username, password);
-        // navigation.navigate('Tabs');
+        // router.push('/(tabs)')
+        router.replace('/');
+        // router.push({pathname:"/(tabs)",params:{token}})
+        console.log('页面跳转成功');
       } else {
         throw new Error(msg || '登录失败');
       }

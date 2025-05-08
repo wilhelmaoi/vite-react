@@ -47,7 +47,7 @@ request.interceptors.request.use(
 
 // 响应拦截器（处理错误）
 request.interceptors.response.use(
-  (response) => response.data,
+  response => response,
   (error) => {
     console.log('请求错误：', error);
     return Promise.reject(error);

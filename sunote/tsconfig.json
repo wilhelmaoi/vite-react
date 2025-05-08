@@ -9,7 +9,7 @@
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [ "./*"]
     }  
   },
   "include": ["src", "node_modules/expo"]

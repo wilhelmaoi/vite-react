@@ -1,9 +1,11 @@
+//src/App.tsx
+
 import { Assets as NavigationAssets } from '@react-navigation/elements';
 import { Asset } from 'expo-asset';
 import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
 
-import { Navigation } from './components';
+import { AppStack } from './components/index';
 import { Loading } from './components//common/Loading';
 import { SignIn } from './components/sign/SignIn';
 
@@ -24,7 +26,6 @@ import {
 const Stack = createNativeStackNavigator();
 
 
-
 Asset.loadAsync([
   ...NavigationAssets,
   require('./assets/newspaper.png'),
@@ -39,8 +40,9 @@ export function App() {
   const navigationTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
 
   const token = useAuthStore((s) => s.token);
-  const setToken = useAuthStore((s) => s.setToken);
+  const saveTokenToStore = useAuthStore((s) => s.setToken);
   console.log('当前 token 是：', token);
+  console.log('当前 服务器地址 是：', process.env.EXPO_PUBLIC_API_URL);
 
   const [loading, setLoading] = React.useState(true);
 
@@ -48,7 +50,7 @@ export function App() {
     (async () => {
       const savedToken = await getToken();
       if (savedToken) {
-        setToken(savedToken);
+        saveTokenToStore(savedToken);
       }
       setLoading(false);
     })();
@@ -61,26 +63,15 @@ export function App() {
 
   return (
     <PaperProvider>
-      {
-        token ? (
-          <Navigation
-            theme={navigationTheme}
-            linking={{
-              enabled: 'auto',
-              prefixes: ['helloworld://'],
-            }}
-            onReady={() => {
-              SplashScreen.hideAsync();
-            }}
-          />
-        ) : (
-          <NavigationContainer theme={navigationTheme}>
-            <Stack.Navigator>
-              <Stack.Screen name="SignIn" component={SignIn} />
-            </Stack.Navigator>
-          </NavigationContainer>
-        )
-      }
+        <NavigationContainer theme={navigationTheme}>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {/* {token ? (
+              <Stack.Screen name="HomeTabs" component={AppStack} />
+            ) : ( */}
+              <Stack.Screen name="Sign" component={SignIn} />
+            {/* )} */}
+          </Stack.Navigator>
+        </NavigationContainer>
     </PaperProvider>
   );
 }

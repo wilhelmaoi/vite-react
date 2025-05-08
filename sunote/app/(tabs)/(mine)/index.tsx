@@ -1,24 +1,20 @@
+import React from 'react';
 import { Avatar, Button, Text, List } from 'react-native-paper';
 import { StyleSheet, View } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import { useAuthStore } from '../../context/store'; // 根据你的项目结构调整路径
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/screen'; // 根据你的项目结构调整路径
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuthStore } from '../../../src/context/store'; // 根据你的项目结构调整路径
+import { useRouter } from 'expo-router';
 
-export function Mine() {
+
+
+export default function Mine() {
   const removeToken = useAuthStore((s) => s.clearToken); // 自定义 store 中的 removeToken 方法
 
 
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const router = useRouter();
 
   const handleLogout = () => {
     removeToken(); // 清除 token
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'SignIn' }], // 使用 reset 防止用户回退
-    });
+    router.replace('/sign-in'); // 使用 replace 防止用户回退
   };
 
   return (
@@ -73,7 +69,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   username: {
-    color: '#fff',
+    // color: '#fff',
     fontSize: 22,
     fontWeight: 'bold',
   },

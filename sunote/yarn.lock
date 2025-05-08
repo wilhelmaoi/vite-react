@@ -1860,7 +1860,7 @@
     use-latest-callback "^0.2.1"
     use-sync-external-store "^1.2.2"
 
-"@react-navigation/elements@^2.2.3", "@react-navigation/elements@^2.2.6":
+"@react-navigation/elements@^2.2.6":
   version "2.2.6"
   resolved "https://registry.npmmirror.com/@react-navigation/elements/-/elements-2.2.6.tgz"
   integrity sha512-UPeaCcEDSDRaxjG+qEHbur6jmNW/f9QNCyPsUt6NMgPEdbB5Z8K8oSx2swIaiCnvUbs/K5G3MuWkqQxGj8QXXA==
@@ -1874,13 +1874,12 @@
   dependencies:
     color "^4.2.3"
 
-"@react-navigation/native-stack@^7.1.13":
-  version "7.2.1"
-  resolved "https://registry.npmmirror.com/@react-navigation/native-stack/-/native-stack-7.2.1.tgz"
-  integrity sha512-zqC6DVpO4pFZrl+8JuIgV8qk+AGdTuv+hJ5EHePmzs9gYSUrDpw6LahFCiXshwBvi9LinIw9Do7mtnQK2Q8AGA==
+"@react-navigation/elements@^2.4.0":
+  version "2.4.0"
+  resolved "https://registry.npmmirror.com/@react-navigation/elements/-/elements-2.4.0.tgz#dacb520ee87a9ededcd9aa175c1f2364a49557f1"
+  integrity sha512-3gTASi9fK+Nj17pu1w58nCLELMYqOZrziO8gmTKhlFFcq7ppF5pMu+IiVOOfSVnxO74UIYMZSIhlu+fK3EG/YA==
   dependencies:
-    "@react-navigation/elements" "^2.2.6"
-    warn-once "^0.1.1"
+    color "^4.2.3"
 
 "@react-navigation/native-stack@^7.2.0":
   version "7.3.10"
@@ -1888,6 +1887,14 @@
   integrity sha512-bO/3bZiL/i2dbJQEeqfxIqp1CKzyx+RPdwaiLm6za8cUl877emnxFeAAOSUbN7r/AJgq+U/iCwc3K88mh+4oRQ==
   dependencies:
     "@react-navigation/elements" "^2.3.8"
+    warn-once "^0.1.1"
+
+"@react-navigation/native-stack@^7.3.11":
+  version "7.3.11"
+  resolved "https://registry.npmmirror.com/@react-navigation/native-stack/-/native-stack-7.3.11.tgz#5a0b0efa484d25dc8435bb6b612a434c1dc8827b"
+  integrity sha512-BthAQ8E7xsObd3apO3rbf8x2gLinYfu2arko7eXkNCKs7I9sbEMry8KXS8rZZN3rgUXhAGWw6nFUBOiBqzu91g==
+  dependencies:
+    "@react-navigation/elements" "^2.4.0"
     warn-once "^0.1.1"
 
 "@react-navigation/native@^7.0.12":
@@ -3331,20 +3338,20 @@ expo-asset@~11.0.5:
     invariant "^2.2.4"
     md5-file "^3.2.3"
 
+expo-constants@~17.0.5, expo-constants@~17.0.8:
+  version "17.0.8"
+  resolved "https://registry.npmmirror.com/expo-constants/-/expo-constants-17.0.8.tgz#d7a21ec6f1f4834ea25aa645be20292ef99c0b81"
+  integrity sha512-XfWRyQAf1yUNgWZ1TnE8pFBMqGmFP5Gb+SFSgszxDdOoheB/NI5D4p7q86kI2fvGyfTrxAe+D+74nZkfsGvUlg==
+  dependencies:
+    "@expo/config" "~10.0.11"
+    "@expo/env" "~0.4.2"
+
 expo-constants@~17.0.7:
   version "17.0.7"
   resolved "https://registry.npmmirror.com/expo-constants/-/expo-constants-17.0.7.tgz"
   integrity sha512-sp5NUiV17I3JblVPIBDgoxgt7JIZS30vcyydCYHxsEoo+aKaeRYXxGYilCvb9lgI6BBwSL24sQ6ZjWsCWoF1VA==
   dependencies:
     "@expo/config" "~10.0.10"
-    "@expo/env" "~0.4.2"
-
-expo-constants@~17.0.8:
-  version "17.0.8"
-  resolved "https://registry.npmmirror.com/expo-constants/-/expo-constants-17.0.8.tgz#d7a21ec6f1f4834ea25aa645be20292ef99c0b81"
-  integrity sha512-XfWRyQAf1yUNgWZ1TnE8pFBMqGmFP5Gb+SFSgszxDdOoheB/NI5D4p7q86kI2fvGyfTrxAe+D+74nZkfsGvUlg==
-  dependencies:
-    "@expo/config" "~10.0.11"
     "@expo/env" "~0.4.2"
 
 expo-dev-client@~5.0.12:
@@ -3404,6 +3411,14 @@ expo-keep-awake@~14.0.3:
   resolved "https://registry.npmmirror.com/expo-keep-awake/-/expo-keep-awake-14.0.3.tgz"
   integrity sha512-6Jh94G6NvTZfuLnm2vwIpKe3GdOiVBuISl7FI8GqN0/9UOg9E0WXXp5cDcfAG8bn80RfgLJS8P7EPUGTZyOvhg==
 
+expo-linking@~7.0.5:
+  version "7.0.5"
+  resolved "https://registry.npmmirror.com/expo-linking/-/expo-linking-7.0.5.tgz#6f583c636a3cc29f02d67a1550b21f8e636fe2af"
+  integrity sha512-3KptlJtcYDPWohk0MfJU75MJFh2ybavbtcSd84zEPfw9s1q3hjimw3sXnH03ZxP54kiEWldvKmmnGcVffBDB1g==
+  dependencies:
+    expo-constants "~17.0.5"
+    invariant "^2.2.4"
+
 expo-manifests@~0.15.5:
   version "0.15.7"
   resolved "https://registry.npmmirror.com/expo-manifests/-/expo-manifests-0.15.7.tgz"
@@ -3433,10 +3448,10 @@ expo-modules-core@2.2.3:
   dependencies:
     invariant "^2.2.4"
 
-expo-router@^4.0.20:
-  version "4.0.20"
-  resolved "https://registry.npmmirror.com/expo-router/-/expo-router-4.0.20.tgz#1b4d7c9b9fd3c16a5bd145acab6281ae581efdc5"
-  integrity sha512-1+CtvohptOsG/Piejk8uQ9cmM+8ojadFkdeThCn4klZjc0dtFSSHenb8D/0RKuBdp4taBkNaqgEKwYvhVBJyEg==
+expo-router@~4.0.21:
+  version "4.0.21"
+  resolved "https://registry.npmmirror.com/expo-router/-/expo-router-4.0.21.tgz#191e8e5a4401097261cf54461e621387da6cf910"
+  integrity sha512-z1U9cGZbgL+ZSHp533VMobOqdkUpFBlDXBpd9/JH+Q0wW49is0G2PrJVUYMzdwr30HSUltdO/19W8rRwjfOnFw==
   dependencies:
     "@expo/metro-runtime" "4.0.1"
     "@expo/server" "^0.5.3"
@@ -5779,10 +5794,10 @@ react-native-reanimated@3.16.2:
     convert-source-map "^2.0.0"
     invariant "^2.2.4"
 
-react-native-safe-area-context@^5.4.0:
-  version "5.4.0"
-  resolved "https://registry.npmmirror.com/react-native-safe-area-context/-/react-native-safe-area-context-5.4.0.tgz#04b51940408c114f75628a12a93569d30c525454"
-  integrity sha512-JaEThVyJcLhA+vU0NU8bZ0a1ih6GiF4faZ+ArZLqpYbL6j7R3caRqj+mE3lEtKCuHgwjLg3bCxLL1GPUJZVqUA==
+react-native-safe-area-context@4.12.0:
+  version "4.12.0"
+  resolved "https://registry.npmmirror.com/react-native-safe-area-context/-/react-native-safe-area-context-4.12.0.tgz#17868522a55bbc6757418c94a1b4abdda6b045d9"
+  integrity sha512-ukk5PxcF4p3yu6qMZcmeiZgowhb5AsKRnil54YFUUAXVIS7PJcMHGGC+q44fCiBg44/1AJk5njGMez1m9H0BVQ==
 
 react-native-screens@~4.4.0:
   version "4.4.0"
