@@ -1,101 +1,108 @@
-import React from 'react';
-import { Avatar, Button, Text, List } from 'react-native-paper';
-import { StyleSheet, View } from 'react-native';
-import { useAuthStore } from '../../../src/context/store'; // 根据你的项目结构调整路径
-import { useRouter } from 'expo-router';
-
-
+import React from "react";
+import { Avatar, Button, Text, List, Appbar, Surface } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import { useAuthStore } from "../../../src/context/store"; // 根据你的项目结构调整路径
+import { useRouter } from "expo-router";
+import ThemeToggleButton from "../../../src/theme/ThemeToggleButton"; // 调整路径
 
 export default function Mine() {
   const removeToken = useAuthStore((s) => s.clearToken); // 自定义 store 中的 removeToken 方法
-
 
   const router = useRouter();
 
   const handleLogout = () => {
     removeToken(); // 清除 token
-    router.replace('/sign-in'); // 使用 replace 防止用户回退
+    router.replace("/sign-in"); // 使用 replace 防止用户回退
   };
 
   return (
-    <View style={styles.container}>
-      <Avatar.Image 
-        size={80} 
-        source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2111/2111370.png' }} 
-      />  
-      <View style={styles.statusIndicator} />
+    <Surface style={{ flex: 1 }}>
+      <Appbar.Header>
+        {/* <Appbar.Content title="个人中心" /> */}
+        <ThemeToggleButton />
+      </Appbar.Header>
+      <Surface style={styles.container}>
+        <Avatar.Image
+          size={80}
+          source={{
+            uri: "https://cdn-icons-png.flaticon.com/512/2111/2111370.png",
+          }}
+          style={{ backgroundColor: "#fff" }}
+        />
+        <Avatar.Text
+          size={24}
+          label="在线"
+          style={styles.statusIndicator}
+          color="#fff"/>
+        <Text style={styles.username}>wilhelmaoi</Text>
+        <Text style={styles.tag}>wilhelmaoi#1234</Text>
 
-      <Text style={styles.username}>wilhelmaoi</Text>
-      <Text style={styles.tag}>wilhelmaoi#1234</Text>
+        <Button mode="contained" style={styles.button}>
+          编辑个人资料
+        </Button>
 
-      <Button mode="contained" style={styles.button}>
-        编辑个人资料
-      </Button>
-
-      <List.Section style={styles.list}>
-        <List.Item
-          title="成员加入时间"
-          description="2017年8月27日"
-          left={() => <List.Icon icon="calendar" />}
-        />
-        <List.Item
-          title="您的好友"
-          description="点击查看好友列表"
-          left={() => <List.Icon icon="account-group" />}
-        />
-        <List.Item
-          title="备注"
-          description="添加备注信息"
-          left={() => <List.Icon icon="note-outline" />}
-          right={() => <List.Icon icon="plus-circle-outline" />}
-        />
-        <List.Item
-          title="退出登录"
-          description="退出当前账号"
-          onPress={handleLogout}
-          left={() => <List.Icon icon="logout" />}
-        />
-      </List.Section>
-    </View>
+        <List.Section style={styles.list}>
+          <List.Item
+            title="成员加入时间"
+            description="2017年8月27日"
+            left={() => <List.Icon icon="calendar" />}
+          />
+          <List.Item
+            title="您的好友"
+            description="点击查看好友列表"
+            left={() => <List.Icon icon="account-group" />}
+          />
+          <List.Item
+            title="备注"
+            description="添加备注信息"
+            left={() => <List.Icon icon="note-outline" />}
+            right={() => <List.Icon icon="plus-circle-outline" />}
+          />
+          <List.Item
+            title="退出登录"
+            description="退出当前账号"
+            onPress={handleLogout}
+            left={() => <List.Icon icon="logout" />}
+          />
+        </List.Section>
+      </Surface>
+    </Surface>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
     gap: 10,
   },
   username: {
     // color: '#fff',
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tag: {
-    color: '#aaa',
+    color: "#aaa",
     fontSize: 14,
   },
   statusIndicator: {
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#43b581',
-    position: 'absolute',
+    backgroundColor: "#43b581",
+    position: "absolute",
     bottom: 10,
     right: 15,
     borderWidth: 3,
-    borderColor: '#18191c',
+    borderColor: "#18191c",
   },
   button: {
     marginTop: 10,
-    width: '80%',
+    width: "80%",
   },
   list: {
-    width: '100%',
+    width: "100%",
     marginTop: 10,
   },
 });
-
-

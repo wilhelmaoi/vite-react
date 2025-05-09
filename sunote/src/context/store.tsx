@@ -1,6 +1,7 @@
 // context/store.tsx
 import { create } from 'zustand';
 
+// 账号状态管理
 interface AuthState {
   token: string | null;
   username: string;
@@ -21,4 +22,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUsername: (username) => set({ username }),
   setPassword: (password) => set({ password }),
   logout: () => set({ token: null, username: '', password: '' }),
+}));
+
+
+
+// 主题模式
+// * - 提供 mode: "dark"/"light"
+// * - 提供 toggleTheme() 切换主题
+export type ThemeMode = 'light' | 'dark';
+
+interface ThemeStore {
+  mode: ThemeMode;
+  toggleTheme: () => void;
+}
+
+
+export const useThemeStore = create<ThemeStore>((set) => ({
+  mode: 'light',
+  toggleTheme: () =>
+    set((state) => ({
+      mode: state.mode === 'light' ? 'dark' : 'light',
+    })),
 }));

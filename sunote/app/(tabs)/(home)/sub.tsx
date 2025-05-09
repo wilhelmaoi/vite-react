@@ -1,12 +1,11 @@
 import React from 'react';
+import { Button, Text,Surface, } from "react-native-paper";
 import { StyleSheet } from 'react-native';
-import { Surface,Text } from 'react-native-paper';
 
-
-export default function Community() {
-  return (
-    <Surface style={styles.container}>
-      <Text>Community Screen</Text>
+export default function Sub() {
+  return (    
+  <Surface style={styles.container}>
+      <Text>关注 Screen</Text>
       {/* <Button screen="Profile" onPress={() => console.log('Go to Profile')}>
         Go to Profile
       </Button>

@@ -1800,6 +1800,11 @@
   resolved "https://registry.npmmirror.com/@react-native/normalize-colors/-/normalize-colors-0.76.7.tgz"
   integrity sha512-ST1xxBuYVIXPdD81dR6+tzIgso7m3pa9+6rOBXTh5Xm7KEEFik7tnQX+GydXYMp3wr1gagJjragdXkPnxK6WNg==
 
+"@react-native/normalize-colors@0.76.8":
+  version "0.76.8"
+  resolved "https://registry.npmmirror.com/@react-native/normalize-colors/-/normalize-colors-0.76.8.tgz#79380c178ec7437f4857bebeb860ee97bb069318"
+  integrity sha512-FRjRvs7RgsXjkbGSOjYSxhX5V70c0IzA/jy3HXeYpATMwD9fOR1DbveLW497QGsVdCa0vThbJUtR8rIzAfpHQA==
+
 "@react-native/normalize-colors@0.76.9":
   version "0.76.9"
   resolved "https://registry.npmmirror.com/@react-native/normalize-colors/-/normalize-colors-0.76.9.tgz#1c45ce49871ccea7d6fa9332cb14724adf326d6a"
@@ -3479,12 +3484,17 @@ expo-splash-screen@~0.29.22:
   dependencies:
     "@expo/prebuild-config" "^8.0.27"
 
-expo-system-ui@~4.0.4:
-  version "4.0.8"
-  resolved "https://registry.npmmirror.com/expo-system-ui/-/expo-system-ui-4.0.8.tgz"
-  integrity sha512-0AmWXJ3ObwMYxi2YGagwRQikydoUZJXLeK4A0FY1PsZpnlorSQ4IAfEVS38JmA54tf5CpP4TjBp5ZVEjRyv1rw==
+expo-status-bar@~2.0.1:
+  version "2.0.1"
+  resolved "https://registry.npmmirror.com/expo-status-bar/-/expo-status-bar-2.0.1.tgz#fc07726346dc30fbb68aadb0d7890b34fba42eee"
+  integrity sha512-AkIPX7jWHRPp83UBZ1iXtVvyr0g+DgBVvIXTtlmPtmUsm8Vq9Bb5IGj86PW8osuFlgoTVAg7HI/+Ok7yEYwiRg==
+
+expo-system-ui@~4.0.9:
+  version "4.0.9"
+  resolved "https://registry.npmmirror.com/expo-system-ui/-/expo-system-ui-4.0.9.tgz#a3dc4af52dab589dd433a28ed286360cea0e008d"
+  integrity sha512-hqBc0EWeK/BTB8i4H84vqNjje8GgxhapYrcWdg5qriaRA/u+bNNxhmpZXdAjFuhonOP4SmAbF+gjoJJWsTrhUg==
   dependencies:
-    "@react-native/normalize-colors" "0.76.7"
+    "@react-native/normalize-colors" "0.76.8"
     debug "^4.3.2"
 
 expo-updates-interface@~1.0.0:

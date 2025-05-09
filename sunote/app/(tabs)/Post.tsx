@@ -3,10 +3,10 @@ import { StyleSheet } from 'react-native';
 import { Surface,Text } from 'react-native-paper';
 
 
-export default function Community() {
+export default function Post() {
   return (
     <Surface style={styles.container}>
-      <Text>Community Screen</Text>
+      <Text>投稿界面</Text>
       {/* <Button screen="Profile" onPress={() => console.log('Go to Profile')}>
         Go to Profile
       </Button>
