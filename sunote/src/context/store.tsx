@@ -44,3 +44,20 @@ export const useThemeStore = create<ThemeStore>((set) => ({
       mode: state.mode === 'light' ? 'dark' : 'light',
     })),
 }));
+
+
+// 侧边栏状态
+interface ModalStore {
+  visible: boolean;
+  setVisible: (value: boolean) => void;
+}
+
+export const useMaskStore = create<ModalStore>((set) => ({
+  visible: false,
+  setVisible: (value: boolean) => set({ visible: value }),
+}));
+
+// export const useModalStore = create(set => ({
+//   visible: false,
+//   setVisible: (v) => set({ visible: v })
+// }));

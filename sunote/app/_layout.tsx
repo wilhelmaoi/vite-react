@@ -8,10 +8,11 @@ import { useAuthStore, useThemeStore } from "../src/context/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
-import { useColorScheme } from "react-native";
+import { useColorScheme, View } from "react-native";
 import { Provider as PaperProvider, Surface } from "react-native-paper";
 import { FontAwesome } from "@expo/vector-icons";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // SplashScreen.preventAutoHideAsync();
 
@@ -31,17 +32,28 @@ export default function RootLayout() {
           // backgroundColor={Theme.colors.primary}
           translucent={true}
         />
-
-        {/* <Surface> */}
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="sign-in"
-            options={{
-              presentation: "modal",
-            }}
-          />
-        </Stack>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          {/* <Surface> */}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            {/* <Stack.Screen name="drawer" /> */}
+            <Stack.Screen
+              name="sign-in"
+              options={{
+                presentation: "modal",
+              }}
+            />
+            {/* <Stack.Screen name="modal/greyMask"/> */}
+            <Stack.Screen
+              name="(modal)"
+              options={{
+                presentation: "modal",
+                headerShown: false,
+                // contentStyle: { backgroundColor: 'rgba(0,0,0,0.35)' },
+              }}
+            />
+          </Stack>
+        </GestureHandlerRootView>
       </ThemeProvider>
     </SafeAreaView>
   );

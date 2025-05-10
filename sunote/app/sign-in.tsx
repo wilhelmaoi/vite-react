@@ -1,15 +1,31 @@
 // app/index.tsx
-import React, { useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { TextInput, Button, Text, useTheme } from 'react-native-paper';
-import { useAuthStore } from '../src/context/store';
+import React, { useEffect } from "react";
+import {
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
+import { TextInput, Button, Text, useTheme, Surface } from "react-native-paper";
+import { useAuthStore, useMaskStore } from "../src/context/store";
 
-import { saveToken, saveAccount, savePassword, getAccount, getPassword } from '../src/context/secureStore'; // SecureStore相关
-import request from '../src/database/request';
-import { Link,useRouter } from 'expo-router';
+import {
+  saveToken,
+  saveAccount,
+  savePassword,
+  getAccount,
+  getPassword,
+} from "../src/context/secureStore"; // SecureStore相关
+import request from "../src/database/request";
+import { Link, useRouter } from "expo-router";
+import SignUpModal from "../src/components/SignUpModal";
 
 // 登录成功后的处理
-async function onLoginSuccess(token: string, username: string, password: string) {
+async function onLoginSuccess(
+  token: string,
+  username: string,
+  password: string
+) {
   const authStore = useAuthStore.getState();
   authStore.setToken(token);
   authStore.setUsername(username);
@@ -21,13 +37,12 @@ async function onLoginSuccess(token: string, username: string, password: string)
 }
 
 export default function SignIn() {
-
   const router = useRouter();
   const theme = useTheme();
-  
+
   // 从store拿状态
   const { username, password, setUsername, setPassword } = useAuthStore();
-
+    const { visible, setVisible } = useMaskStore();
   // 初次进入页面时，自动读取账号密码
   useEffect(() => {
     async function loadSavedCredentials() {
@@ -37,85 +52,104 @@ export default function SignIn() {
       if (savedPassword) setPassword(savedPassword);
     }
     loadSavedCredentials();
-    console.log('当前进入sign界面');
-    
+    console.log("当前进入sign界面");
   }, []);
 
-  
   const handleSignIn = async () => {
     try {
-      console.log('账号信息', username, password);
-      const response = await request.post('/login', {
+      console.log("账号信息", username, password);
+      const response = await request.post("/login", {
         username,
         password,
       });
-      console.log('code', response.data.code);
-      const  code  = response.data.code;
-      const  msg  = response.data.msg;
-      const  token  = response.data.data.token;
+      console.log("code", response.data.code);
+      const code = response.data.code;
+      const msg = response.data.msg;
+      const token = response.data.data.token;
       // const { code, msg, data: token } = response.data;
       // console.log('response', response);
       // console.log('登录成功', code, msg,token);
       if (code === 200 && token) {
-        console.log('token获取成功', token);
+        console.log("token获取成功", token);
         await onLoginSuccess(token, username, password);
-        // router.push('/(tabs)')
-        router.replace('/');
+        router.push("/(tabs)/home");
+        // router.replace('(tabs)');
         // router.push({pathname:"/(tabs)",params:{token}})
-        console.log('页面跳转成功');
+        console.log("页面跳转成功");
       } else {
-        throw new Error(msg || '登录失败');
+        throw new Error(msg || "登录失败");
       }
     } catch (error: any) {
-      Alert.alert('登录失败', error.message || '请检查用户名或密码');
+      Alert.alert("登录失败", error.message || "请检查用户名或密码");
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <Text variant="headlineMedium" style={styles.title}>
-        欢迎登录
-      </Text>
-      <TextInput
-        label="用户名"
-        value={username}
-        onChangeText={setUsername}
-        style={styles.input}
-        mode="outlined"
-        left={<TextInput.Icon icon="account" />}
-      />
-      <TextInput
-        label="密码"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        mode="outlined"
-        style={styles.input}
-        left={<TextInput.Icon icon="lock" />}
-      />
-      <Button
-        mode="contained"
-        onPress={handleSignIn}
-        style={styles.button}
-        buttonColor={theme.colors.primary}
+    <Surface style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        登录
-      </Button>
-    </KeyboardAvoidingView>
+        <Text variant="headlineMedium" style={styles.title}>
+          欢迎登录
+        </Text>
+        <TextInput
+          label="用户名"
+          value={username}
+          onChangeText={setUsername}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="account" />}
+        />
+        <TextInput
+          label="密码"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="lock" />}
+        />
+        <Button
+          mode="contained"
+          onPress={handleSignIn}
+          style={styles.button}
+          buttonColor={theme.colors.primary}
+        >
+          登录
+        </Button>
+        {/* <Link href="/modal" style={styles.registerLink}> */}
+          <Text
+            variant="bodyMedium"
+            style={{ ...styles.registerLink, color: theme.colors.primary, fontSize: 16 }}
+            onPress={() => {
+              // router.push("/modal");
+              router.push('/(modal)/sign-up');
+            }}
+          >
+            没有账号？注册一个
+          </Text>
+
+          <Button onPress={() => setVisible(true)} >
+                测试
+          </Button>
+
+      {/* 控制弹窗 */}
+      <SignUpModal visible={visible} onClose={() => setVisible(false)} />
+        {/* </Link> */}
+      </KeyboardAvoidingView>
+    </Surface>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     paddingHorizontal: 30,
   },
   title: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 30,
   },
   input: {
@@ -124,5 +158,10 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 10,
     paddingVertical: 6,
+  },
+  registerLink: {
+    alignSelf: "center",
+    // alignSelf: 'flex-end',
+    marginTop: 10,
   },
 });

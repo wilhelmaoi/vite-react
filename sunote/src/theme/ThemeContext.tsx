@@ -5,7 +5,6 @@ import { DarkTheme, DefaultTheme, Theme} from "@react-navigation/native";
 import colorSchemeLight from './lightColors.json';
 import colorSchemeDark from './darkColors.json';
 
-import { NavigationContainer } from '@react-navigation/native';
 import { ThemeMode, useThemeStore } from "../context/store";
 
 // 浅色主题模式下的主题配置
