@@ -1,34 +1,29 @@
-// app/sign-in.tsx
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Alert,
-  View,
-  StatusBar,
 } from "react-native";
 import { TextInput, Button, Text, useTheme, Surface } from "react-native-paper";
 import { useAuthStore, useMaskStore } from "../src/context/store";
-
 import {
   saveToken,
   saveAccount,
   savePassword,
   getAccount,
   getPassword,
-} from "../src/context/secureStore"; // SecureStore相关
+} from "../src/context/secureStore";
 import request from "../src/database/request";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { Pressable } from "react-native-gesture-handler";
-import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import RegisterForm from "./register";
+
 // 登录成功后的处理
 async function onLoginSuccess(
   token: string,
@@ -51,40 +46,74 @@ export default function SignIn() {
 
   const sheetRef = useRef<BottomSheet>(null);
 
-  // variables
+  // 下拉关闭遮罩用
+  const { setVisible } = useMaskStore();
+  const visible = useMaskStore((state) => state.visible);
+
+  // 遮罩动画
+  const opacity = useSharedValue(0);
+
+  // snapPoints用useMemo优化
   const snapPoints = useMemo(() => ["20%", "90%"], []);
 
-  const handleSheetChange = (index: number) => {
-    // console.log("handleSheetChange", index);
+  // 动画样式
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
-      if (index === -1) {
-        // let visible = false;
-    setVisible(false); // 关闭遮罩
-  }
+  // bottom sheet 关闭前淡出动画
+  const fadeOutAndHide = () => {
+    // runOnJS只能在worklet里被调用
+    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
+      if (finished) {
+        runOnJS(setVisible)(false);
+      }
+    });
   };
-  const handleSnapPress = useCallback((index) => {
-                        setVisible(true);
 
-    sheetRef.current?.snapToIndex(index);
+  // bottom sheet 打开动画
+  useEffect(() => {
+    if (visible) {
+      opacity.value = withTiming(1, { duration: 180 });
+    }
+  }, [visible]);
 
-  }, []);
+  // bottom sheet 关闭/下拉事件
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1 && visible) {
+        fadeOutAndHide();
+      }
+    },
+    [visible]
+  );
 
+  // 按下 "注册" 或用代码控制展示 bottom sheet
+  const handleSnapPress = useCallback(
+    (idx: number) => {
+      setVisible(true);
+      sheetRef.current?.snapToIndex(idx);
+    },
+    []
+  );
+
+  // 遮罩点击关闭（交互友好：先close sheet，再淡出遮罩）
   const handleClosePress = useCallback(() => {
     sheetRef.current?.close();
     setVisible(false);
+    // fadeOutAndHide 会由 onChange 做
   }, []);
 
-  // 从store拿状态
-  const { username, password, setUsername, setPassword } = useAuthStore();
-  const { setVisible } = useMaskStore();
+  // --------- 登录逻辑略 -----------
+  const {
+    username,
+    password,
+    setUsername,
+    setPassword,
+  } = useAuthStore();
 
-
-  // 创建一个共享值，初值0（完全透明）
-  const opacity = useSharedValue(0);
-  const visible = useMaskStore((state) => state.visible);
-
+  // 自动读账号密码
   useEffect(() => {
-    // 初次进入页面时，自动读取账号密码
     async function loadSavedCredentials() {
       const savedUsername = await getAccount();
       const savedPassword = await getPassword();
@@ -92,38 +121,15 @@ export default function SignIn() {
       if (savedPassword) setPassword(savedPassword);
     }
     loadSavedCredentials();
-    console.log("当前进入sign界面");
-
-    // visible变true时，淡入；变false时淡出
-    opacity.value = withTiming(visible ? 1 : 0, { duration: 100 });
-  }, [visible]);
-
-  // 定义动画样式
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
+  }, []);
 
   const handleSignIn = async () => {
     try {
-      console.log("账号信息", username, password);
-      const response = await request.post("/login", {
-        username,
-        password,
-      });
-      console.log("code", response.data.code);
-      const code = response.data.code;
-      const msg = response.data.msg;
-      const token = response.data.data.token;
-      // const { code, msg, data: token } = response.data;
-      // console.log('response', response);
-      // console.log('登录成功', code, msg,token);
-      if (code === 200 && token) {
-        console.log("token获取成功", token);
-        await onLoginSuccess(token, username, password);
+      const response = await request.post("/login", { username, password });
+      const { code, data, msg } = response.data;
+      if (code === 200 && data?.token) {
+        await onLoginSuccess(data.token, username, password);
         router.push("/(tabs)/home");
-        // router.replace('(tabs)');
-        // router.push({pathname:"/(tabs)",params:{token}})
-        console.log("页面跳转成功");
       } else {
         throw new Error(msg || "登录失败");
       }
@@ -134,11 +140,15 @@ export default function SignIn() {
 
   return (
     <Surface style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* <Pressable
-     
-      onPress={handleClosePress}
-    /> */}
-    
+      {/* 遮罩动画；只有visible时才渲染 */}
+      {visible && (
+        <Animated.View
+          style={[styles.overlay, animatedStyle]}
+          pointerEvents={visible ? "auto" : "none"}
+        >
+          <Pressable style={{ flex: 1 }} onPress={handleClosePress} />
+        </Animated.View>
+      )}
 
       <KeyboardAvoidingView
         style={styles.container}
@@ -172,7 +182,6 @@ export default function SignIn() {
         >
           登录
         </Button>
-        {/* <Link href="/modal" style={styles.registerLink}> */}
         <Text
           variant="bodyMedium"
           style={{
@@ -180,50 +189,20 @@ export default function SignIn() {
             color: theme.colors.primary,
             fontSize: 16,
           }}
-          onPress={() => {
-            // router.push("/modal");
-
-            handleSnapPress(0);
-          }}
+          onPress={() => handleSnapPress(0)}
         >
           没有账号？注册一个
         </Text>
-
-        {/* <Button onPress={() => handleSnapPress(0)}>测试</Button> */}
-
-        {/* 控制弹窗 */}
-        {/* <SignUpModal visible={visible} onClose={() => setVisible(false)} /> */}
-
-        {/* </Link> */}
       </KeyboardAvoidingView>
-      {visible && (
-        // <Animated.View
-        //   style={[styles.overlay, animatedStyle]}
-        //   pointerEvents={visible ? "none" : "none"}
-        // >
-          <Pressable style={styles.overlay} onPress={handleClosePress} />
-        // </Animated.View>
 
-        //  <Pressable
-        //   style={styles.overlay}
-        //   onPress={handleClosePress}
-        // />
-
-        // <View>
-        //   <LinearGradient
-        //     colors={["#ffffff", "rgba(0,0,0,0.4)"]}
-        //     style={StyleSheet.absoluteFill}
-        //   />
-        // </View>
-      )}
-
+      {/* BottomSheet only控制 */}
       <BottomSheet
         ref={sheetRef}
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         onChange={handleSheetChange}
-        index={visible ? 0 : -1}
         enablePanDownToClose={true}
+        index={-1}
         backgroundStyle={{
           backgroundColor: theme.colors.background,
         }}
@@ -231,9 +210,8 @@ export default function SignIn() {
           borderTopLeftRadius: 16,
           borderTopRightRadius: 16,
         }}
-        // onClose={() => {console.log('sheet closed!');setVisible(false)}}
       >
-         <RegisterForm onSubmit={handleClosePress} />
+        <Text>nihao</Text>
       </BottomSheet>
     </Surface>
   );
@@ -243,8 +221,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.6)", // 半透明黑色
-
-
+    zIndex: 10,
   },
   container: {
     flex: 1,
@@ -264,7 +241,6 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     alignSelf: "center",
-    // alignSelf: 'flex-end',
     marginTop: 10,
   },
 });

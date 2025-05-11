@@ -17,10 +17,10 @@ export default function SignUpModal({ visible, onClose }: {
     >
       <View style={styles.overlay}>
         {/* 半透明背景 */}
-        <LinearGradient
+        {/* <LinearGradient
           colors={["#ffffff", "rgba(0,0,0,0.4)"]}
           style={StyleSheet.absoluteFill}
-        />
+        /> */}
         {/* 点击背景关闭 */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
 
@@ -40,7 +40,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modal: {
-    backgroundColor: "white",
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

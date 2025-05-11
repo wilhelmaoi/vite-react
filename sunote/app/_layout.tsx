@@ -4,7 +4,7 @@ import { useFonts } from "expo-font";
 import { Redirect, router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { useAuthStore, useThemeStore } from "../src/context/store";
+import { useAuthStore, useMaskStore, useThemeStore } from "../src/context/store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { DarkTheme, DefaultTheme } from "@react-navigation/native";
@@ -22,6 +22,8 @@ export default function RootLayout() {
   const Theme = useTheme(); // 动态导航主题
   const mode = useThemeStore((state) => state.mode);
   // const toggleTheme = useThemeStore((state) => state.toggleTheme);
+  const { visible,setVisible } = useMaskStore();
+  const StatusBarColor = visible === false ? "transparent" : "rgba(0, 0, 0, 0.6)"; 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Theme.colors.background }}>
@@ -29,8 +31,9 @@ export default function RootLayout() {
         {/* 根据主题控制状态栏字色 */}
         <StatusBar
           style={mode === "dark" ? "light" : "dark"}
-          // backgroundColor={Theme.colors.primary}
+          // backgroundColor={Theme.colors.background}
           translucent={true}
+          backgroundColor = {StatusBarColor}
         />
         <GestureHandlerRootView style={{ flex: 1 }}>
           {/* <Surface> */}
