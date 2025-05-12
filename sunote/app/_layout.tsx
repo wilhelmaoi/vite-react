@@ -23,7 +23,7 @@ export default function RootLayout() {
   const mode = useThemeStore((state) => state.mode);
   // const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const { visible,setVisible } = useMaskStore();
-  const StatusBarColor = visible === false ? "transparent" : "rgba(0, 0, 0, 0.6)"; 
+  const StatusBarColor = visible === false ? "transparent" : "rgba(0, 0, 0, 0.25)"; 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Theme.colors.background }}>

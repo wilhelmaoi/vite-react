@@ -1,56 +1,168 @@
-// components/RegisterForm.tsx
-import React from "react";
-import { StyleSheet } from "react-native";
+// app/RegisterForm.tsx
+import React, { useRef, useState } from "react";
+import { KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { TextInput, Button, Text, useTheme } from "react-native-paper";
 import { useAuthStore } from "../src/context/store";
+import { MotiView } from "moti";
+import { Easing } from "react-native-reanimated";
+import request from "../src/database/request";
+// import BottomSheet from "@gorhom/bottom-sheet";
 
-export default function RegisterForm({ onSubmit }: { onSubmit: () => void }) {
+export default function RegisterForm({
+  onSubmit,
+  isFull = false,
+}: {
+  onSubmit: () => void;
+  isFull?: boolean;
+}) {
   const theme = useTheme();
   const { username, password, setUsername, setPassword } = useAuthStore();
+  // const sheetRef = useRef<BottomSheet>(null);
+
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [countdown, setCountdown] = useState(60); // 倒计时
+
+  // 处理表单的展开和收起的css样式
+  let formStyle = isFull ? styles.container_expand : styles.container_contract;
+
+  // 发送验证码，同时禁用按钮几秒
+  const handleSendCode = async () => {
+    if (!/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+      alert("请输入有效邮箱！");
+      return;
+    }
+    try {
+      // ✨假设你有对应的后端API /api/sendCode
+      await request.post("/api/sendCode", { email });
+      alert("验证码已发送，请检查邮箱");
+
+      setCountdown(60);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (e) {
+      alert("发送失败，请稍后重试");
+    }
+  };
 
   const handleRegister = async () => {
-    console.log("注册账号：", username, password);
-    // 模拟注册请求（你可以改成真实请求）
-    setTimeout(() => {
+    // 表单简单校验
+    if (!email || !username || !password || !code) {
+      alert("请完整填写信息");
+      return;
+    }
+    // 模拟注册请求，你应替换为真实API
+    try {
+      await request.post("/register", { username, password, email, code });
       alert("注册成功！");
-    }, 1000);
-    
-     onSubmit(); // 注册完成后关闭底部弹窗
+      onSubmit?.();
+    } catch (e) {
+      alert("注册失败：" + (e?.message || "未知错误"));
+    }
   };
 
   return (
-    <>
-      <Text variant="headlineSmall" style={styles.title}>注册账号</Text>
-      <TextInput
-        label="用户名"
-        value={username}
-        onChangeText={setUsername}
-        style={styles.input}
-        mode="outlined"
-        left={<TextInput.Icon icon="account-plus" />}
-      />
-      <TextInput
-        label="密码"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        mode="outlined"
-        style={styles.input}
-        left={<TextInput.Icon icon="lock" />}
-      />
-      <Button
-        mode="contained"
-        onPress={handleRegister}
-        style={styles.button}
-        buttonColor={theme.colors.primary}
+    <MotiView
+      from={{ maxHeight: 30, paddingTop: 10 }} // ⚠️ 用 maxHeight 而不是 height
+      // animate={{ maxHeight: isFull ? 500 : 500, paddingTop: isFull ? 200 : 10 }}
+      animate={{ maxHeight: isFull ? 600 : 500, paddingTop: isFull ? 100 : 10 }}
+      transition={{
+        type: "timing",
+        duration: 450,
+        easing: Easing.inOut(Easing.ease),
+      }}
+      style={[formStyle, { overflow: "hidden" }]} // overflow避免内容外溢
+    >
+      <KeyboardAvoidingView
+        // style={formStyle}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        注册
-      </Button>
-    </>
+        <Text variant="headlineSmall" style={styles.title}>
+          注册账号
+        </Text>
+        <TextInput
+          label="邮箱"
+          value={email}
+          onChangeText={setEmail}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="email" />}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          label="用户名"
+          value={username}
+          onChangeText={setUsername}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="account-plus" />}
+        />
+        <TextInput
+          label="密码"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="lock" />}
+        />
+        <TextInput
+          label="验证码"
+          value={code}
+          onChangeText={setCode}
+          mode="outlined"
+          style={styles.input}
+          left={<TextInput.Icon icon="form-textbox-password" />}
+          right={
+            <TextInput.Icon
+              icon="send"
+              onPress={countdown ? undefined : handleSendCode}
+              disabled={countdown > 0 || !email}
+              color={theme.colors.primary}
+              // style={{
+              //   opacity: countdown > 0 ? 0.5 : 1, }}// 禁用状态
+            />
+          }
+          placeholder="输入邮箱收到的验证码"
+        />
+        {countdown > 0 && (
+          <Text style={{ marginLeft: 18, color: theme.colors.secondary }}>
+            {" "}
+            {countdown}s后可重新获取{" "}
+          </Text>
+        )}
+        <Button
+          mode="contained"
+          onPress={handleRegister}
+          style={styles.button}
+          buttonColor={theme.colors.primary}
+        >
+          注册
+        </Button>
+      </KeyboardAvoidingView>
+    </MotiView>
   );
 }
 
 const styles = StyleSheet.create({
+  container_contract: {
+    // flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
+  container_expand: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 30,
+  },
   title: {
     textAlign: "center",
     marginBottom: 20,

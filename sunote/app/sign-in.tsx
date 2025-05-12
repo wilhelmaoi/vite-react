@@ -1,5 +1,5 @@
 // app/sign-in.tsx
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   StyleSheet,
   KeyboardAvoidingView,
@@ -54,19 +54,22 @@ export default function SignIn() {
   // variables
   const snapPoints = useMemo(() => ["20%", "90%"], []);
 
+  const [isSheetFull, setIsSheetFull] = useState(false);
+
+
   const handleSheetChange = (index: number) => {
     // console.log("handleSheetChange", index);
+    setIsSheetFull(index === 1);
 
-      if (index === -1) {
-        // let visible = false;
-    setVisible(false); // 关闭遮罩
-  }
+    if (index === -1) {
+      // let visible = false;
+      setVisible(false); // 关闭遮罩
+    }
   };
-  const handleSnapPress = useCallback((index) => {
-                        setVisible(true);
+  const handleSnapPress = useCallback((index:number) => {
+    setVisible(true);
 
     sheetRef.current?.snapToIndex(index);
-
   }, []);
 
   const handleClosePress = useCallback(() => {
@@ -77,7 +80,6 @@ export default function SignIn() {
   // 从store拿状态
   const { username, password, setUsername, setPassword } = useAuthStore();
   const { setVisible } = useMaskStore();
-
 
   // 创建一个共享值，初值0（完全透明）
   const opacity = useSharedValue(0);
@@ -102,6 +104,7 @@ export default function SignIn() {
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
   }));
+
 
   const handleSignIn = async () => {
     try {
@@ -138,7 +141,6 @@ export default function SignIn() {
      
       onPress={handleClosePress}
     /> */}
-    
 
       <KeyboardAvoidingView
         style={styles.container}
@@ -188,7 +190,11 @@ export default function SignIn() {
         >
           没有账号？注册一个
         </Text>
-
+          <Link href="/(tabs)/home" style={styles.registerLink}>
+          <Text >测试，跳转主页</Text>
+          
+            
+          </Link>
         {/* <Button onPress={() => handleSnapPress(0)}>测试</Button> */}
 
         {/* 控制弹窗 */}
@@ -201,7 +207,7 @@ export default function SignIn() {
         //   style={[styles.overlay, animatedStyle]}
         //   pointerEvents={visible ? "none" : "none"}
         // >
-          <Pressable style={styles.overlay} onPress={handleClosePress} />
+        <Pressable style={styles.overlay} onPress={handleClosePress} />
         // </Animated.View>
 
         //  <Pressable
@@ -222,18 +228,16 @@ export default function SignIn() {
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         onChange={handleSheetChange}
-        index={visible ? 0 : -1}
+        index={-1}
+        // index={visible ? 0 : -1}
         enablePanDownToClose={true}
         backgroundStyle={{
           backgroundColor: theme.colors.background,
         }}
-        style={{
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-        }}
+        style={styles.BottomSheet}
         // onClose={() => {console.log('sheet closed!');setVisible(false)}}
       >
-         <RegisterForm onSubmit={handleClosePress} />
+        <RegisterForm onSubmit={handleClosePress} isFull ={isSheetFull}/>
       </BottomSheet>
     </Surface>
   );
@@ -242,9 +246,7 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.6)", // 半透明黑色
-
-
+    backgroundColor: "rgba(0, 0, 0, 0.25)", // 半透明黑色
   },
   container: {
     flex: 1,
@@ -266,5 +268,18 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     // alignSelf: 'flex-end',
     marginTop: 10,
+  },
+  BottomSheet: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
   },
 });
