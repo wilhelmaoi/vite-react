@@ -47,14 +47,14 @@ export default function RootLayout() {
               }}
             />
             {/* <Stack.Screen name="modal/greyMask"/> */}
-            <Stack.Screen
+            {/* <Stack.Screen
               name="(modal)"
               options={{
                 presentation: "modal",
                 headerShown: false,
                 // contentStyle: { backgroundColor: 'rgba(0,0,0,0.35)' },
               }}
-            />
+            /> */}
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>

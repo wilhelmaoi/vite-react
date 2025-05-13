@@ -10,6 +10,8 @@ import { getToken } from "../../src/context/secureStore"; // SecureStore相关
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useTheme } from "../../src/theme/ThemeContext";
 import { Surface } from "react-native-paper";
+
+
 // import userDrawer from "./(drawer)/_layout";
 
 // SplashScreen.preventAutoHideAsync();
@@ -41,7 +43,7 @@ export default function TabLayout() {
 
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "首页",tabBarIcon: ({ color }) => <AntDesign name="home" size={28} color={color} />,  headerShown: false}} />
+      <Tabs.Screen name="home" options={{ title: "首页",tabBarIcon: ({ color }) => <AntDesign name="home" size={28} color={color} />,  headerShown: false,}} />
       <Tabs.Screen name="DayUp" options={{ title: "打卡" ,tabBarIcon: ({ color }) => <AntDesign name="clockcircleo" size={28}  color={color}  />, headerShown: false}} />
       <Tabs.Screen name="Post" 
       options={{  

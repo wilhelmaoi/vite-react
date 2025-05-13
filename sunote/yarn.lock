@@ -2093,6 +2093,22 @@
   dependencies:
     color "^4.2.3"
 
+"@react-navigation/elements@^2.4.2":
+  version "2.4.2"
+  resolved "https://registry.npmmirror.com/@react-navigation/elements/-/elements-2.4.2.tgz#22680bcbec8d59f1aad35934beba83f9e251ed8f"
+  integrity sha512-cudKLsRtOB+i8iDzfBKypdqiHsDy1ruqCfYAtwKEclDmLsxu3/90YXoBtoPyFNyIpsn3GtsJzZsrYWQh78xSWg==
+  dependencies:
+    color "^4.2.3"
+
+"@react-navigation/material-top-tabs@^7.2.13":
+  version "7.2.13"
+  resolved "https://registry.npmmirror.com/@react-navigation/material-top-tabs/-/material-top-tabs-7.2.13.tgz#2ceaeffd51bc6359a0fb4deba1f1fa6eb9e2189e"
+  integrity sha512-0hEoWE0cILm2ydc3+dcVtsfuljcR1tV74ke9Iwc4+vsJhVnSYRnltcx3Ywm8mPcogwB94lw5t2+W2U1rikK6qQ==
+  dependencies:
+    "@react-navigation/elements" "^2.4.2"
+    color "^4.2.3"
+    react-native-tab-view "^4.1.0"
+
 "@react-navigation/native-stack@^7.2.0":
   version "7.3.10"
   resolved "https://registry.npmmirror.com/@react-navigation/native-stack/-/native-stack-7.3.10.tgz#80553b5ccaf27dcf1b67d3d93d7e73fdd985d29f"
@@ -6478,6 +6494,11 @@ react-native-is-edge-to-edge@^1.1.6:
   resolved "https://registry.npmmirror.com/react-native-is-edge-to-edge/-/react-native-is-edge-to-edge-1.1.7.tgz#28947688f9fafd584e73a4f935ea9603bd9b1939"
   integrity sha512-EH6i7E8epJGIcu7KpfXYXiV2JFIYITtq+rVS8uEb+92naMRBdxhTuS8Wn2Q7j9sqyO0B+Xbaaf9VdipIAmGW4w==
 
+react-native-pager-view@6.5.1:
+  version "6.5.1"
+  resolved "https://registry.npmmirror.com/react-native-pager-view/-/react-native-pager-view-6.5.1.tgz#e639e8c975f4c749aae1c3120dc4208265fce4cc"
+  integrity sha512-YdX7bP+rPYvATMU7HzlMq9JaG3ui/+cVRbFZFGW+QshDULANFg9ECR1BA7H7JTIcO/ZgWCwF+1aVmYG5yBA9Og==
+
 react-native-paper@^5.13.1:
   version "5.13.1"
   resolved "https://registry.npmmirror.com/react-native-paper/-/react-native-paper-5.13.1.tgz"
@@ -6516,6 +6537,13 @@ react-native-screens@~4.4.0:
   dependencies:
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
+
+react-native-tab-view@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.npmmirror.com/react-native-tab-view/-/react-native-tab-view-4.1.0.tgz#e45eca6172436d4696527e9df2da45aa3ac09735"
+  integrity sha512-A6pse3u7343aTw8OKxCyC90XG7ytnLBBn2QOxVByQ3TqPTi+X/bUW+B28GBpgNPODl4jscAsXW4qmAJqXDjJ+g==
+  dependencies:
+    use-latest-callback "^0.2.3"
 
 react-native-vector-icons@^10.2.0:
   version "10.2.0"
