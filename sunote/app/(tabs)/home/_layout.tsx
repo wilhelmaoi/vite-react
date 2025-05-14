@@ -1,7 +1,7 @@
 // app/(tabs)/_layout.tsx
 import React from "react";
 import { useFonts } from "expo-font";
-import { Redirect, Stack, useRouter, withLayoutContext } from "expo-router";
+import { Redirect, Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -18,6 +18,8 @@ import { Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import CustomTopTabBar from "../../../src/components/CustomTopTabBar";
 
+
+
 // SplashScreen.preventAutoHideAsync();
 export default function Layout() {
   const theme = useTheme(); // 🔥 获取主题颜色
@@ -25,15 +27,11 @@ export default function Layout() {
   const router = useRouter();
 
   return (
-
     <Tabs
-
       tabBar={(props) => <CustomTopTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-
         tabBarPosition: "top",
-
         tabBarActiveTintColor: theme.colors.primary, // 选中颜色
         tabBarInactiveTintColor: theme.colors.secondary, // 未选中颜色
         tabBarLabelStyle: { fontSize: 16 },
@@ -50,7 +48,6 @@ export default function Layout() {
         },
       }}
     >
-
       <Tabs.Screen
         name="hot"
         options={{

@@ -1,32 +1,53 @@
 import React from "react";
 import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useNavigationState } from "@react-navigation/native";
 import { useTheme } from "../theme/ThemeContext";
+import { DrawerActions, useNavigation } from "@react-navigation/native";
 
-export default function CustomTopTabBar({ state, descriptors, navigation }) {
-    const theme = useTheme(); // 🔥 获取主题颜色
+// 使用更简单的props，避免类型错误
+export default function CustomTopTabBar(props: any) {
+  const { state, descriptors, navigation } = props;
+  const theme = useTheme(); // 🔥 获取主题颜色
+  const drawerNavigation = useNavigation(); // 获取导航对象用于操作抽屉
+  
+  // 打开侧边栏的处理函数
+  const handleOpenDrawer = () => {
+    drawerNavigation.dispatch(DrawerActions.openDrawer());
+  };
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 左侧按钮 */}
-      <TouchableOpacity onPress={() => console.log("Left pressed")}>
-        <MaterialIcons name="menu" size={24} color="black" />
+      <TouchableOpacity onPress={handleOpenDrawer}>
+        <MaterialIcons name="menu" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
 
       {/* 中间 Tabs */}
       <View style={styles.centerTabs}>
-        {state.routes.map((route, index) => {
+        {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
           const label = options.title ?? route.name;
           const isFocused = state.index === index;
 
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
           return (
             <TouchableOpacity
               key={route.key}
-              onPress={() => navigation.navigate(route.name)}
-              style={[styles.tabItem, isFocused && styles.tabItemActive]}
+              onPress={onPress}
+              style={[styles.tabItem, isFocused && { ...styles.tabItemActive, borderBottomColor: theme.colors.primary }]}
             >
-              <Text style={{ color: isFocused ? "#673ab7" : "#aaa", fontSize: 16 }}>
+              <Text style={{ color: isFocused ? theme.colors.primary : theme.colors.secondary, fontSize: 16 }}>
                 {label}
               </Text>
             </TouchableOpacity>
@@ -36,7 +57,7 @@ export default function CustomTopTabBar({ state, descriptors, navigation }) {
 
       {/* 右侧按钮 */}
       <TouchableOpacity onPress={() => console.log("Right pressed")}>
-        <MaterialIcons name="search" size={24} color="black" />
+        <MaterialIcons name="search" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
     </View>
   );
@@ -45,7 +66,6 @@ export default function CustomTopTabBar({ state, descriptors, navigation }) {
 const styles = StyleSheet.create({
   container: {
     height: 60,
-    backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -61,6 +81,5 @@ const styles = StyleSheet.create({
   },
   tabItemActive: {
     borderBottomWidth: 2,
-    borderBottomColor: "#673ab7",
   },
 });
