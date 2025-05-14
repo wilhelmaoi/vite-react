@@ -17,14 +17,17 @@ import { DrawerActions, useNavigation } from "@react-navigation/native";
 import { Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import CustomTopTabBar from "../../../src/components/CustomTopTabBar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import CustomDrawerContent from "../../../src/components/CustomDrawerContent";
+import { Dimensions } from "react-native";
 
-
+const Drawer = createDrawerNavigator();
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // SplashScreen.preventAutoHideAsync();
-export default function Layout() {
-  const theme = useTheme(); // 🔥 获取主题颜色
-  // const navigation = useNavigation();
-  const router = useRouter();
+export default function TabsLayout() {
+  const theme = useTheme();
 
   return (
     <Tabs
@@ -32,19 +35,18 @@ export default function Layout() {
       screenOptions={{
         headerShown: false,
         tabBarPosition: "top",
-        tabBarActiveTintColor: theme.colors.primary, // 选中颜色
-        tabBarInactiveTintColor: theme.colors.secondary, // 未选中颜色
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.secondary,
         tabBarLabelStyle: { fontSize: 16 },
         tabBarStyle: {
           height: 60,
-          backgroundColor: theme.colors.background, // ✅ 动态背景色
-          borderBottomWidth: 0, // 可选，去掉下边框
-          // borderTopWidth: 0, // 可选，去掉下边框
-          elevation: 0, // 安卓去阴影
+          backgroundColor: theme.colors.background,
+          borderBottomWidth: 0,
+          elevation: 0,
         },
         tabBarShowLabel: true,
         tabBarIconStyle: {
-          display: "none", // 隐藏图标
+          display: "none",
         },
       }}
     >
@@ -65,3 +67,35 @@ export default function Layout() {
     </Tabs>
   );
 }
+
+// export default function Layout() {
+//   const theme = useTheme();
+
+//   return (
+//     <GestureHandlerRootView style={{ flex: 1 }}>
+//       <Drawer.Navigator
+//         drawerContent={(props) => <CustomDrawerContent {...props} />}
+//         screenOptions={{
+//           headerShown: false,
+//           drawerStyle: {
+//             backgroundColor: theme.colors.background,
+//             width: SCREEN_WIDTH * 0.8,
+//           },
+//           drawerType: "front",
+//           overlayColor: 'rgba(0,0,0,0.5)',
+//           swipeEnabled: true,
+//           drawerPosition: "left",
+//           drawerStatusBarAnimation: "slide",
+//         }}
+//       >
+//         <Drawer.Screen 
+//           name="tabs" 
+//           component={TabsLayout}
+//           options={{
+//             drawerLabel: "主页"
+//           }}
+//         />
+//       </Drawer.Navigator>
+//     </GestureHandlerRootView>
+//   );
+// }

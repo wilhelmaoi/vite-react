@@ -3,22 +3,21 @@ import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeContext";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
+import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 
 // 使用更简单的props，避免类型错误
 export default function CustomTopTabBar(props: any) {
   const { state, descriptors, navigation } = props;
-  const theme = useTheme(); // 🔥 获取主题颜色
-  const drawerNavigation = useNavigation(); // 获取导航对象用于操作抽屉
-  
-  // 打开侧边栏的处理函数
-  const handleOpenDrawer = () => {
-    drawerNavigation.dispatch(DrawerActions.openDrawer());
-  };
-  
+  const theme = useTheme();
+  const drawerNavigation = useNavigation();
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 左侧按钮 */}
-      <TouchableOpacity onPress={handleOpenDrawer}>
+      <TouchableOpacity 
+        onPress={() => drawerNavigation.dispatch(DrawerActions.openDrawer())}
+        style={styles.iconButton}
+      >
         <MaterialIcons name="menu" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
 
@@ -56,7 +55,7 @@ export default function CustomTopTabBar(props: any) {
       </View>
 
       {/* 右侧按钮 */}
-      <TouchableOpacity onPress={() => console.log("Right pressed")}>
+      <TouchableOpacity style={styles.iconButton}>
         <MaterialIcons name="search" size={24} color={theme.colors.primary} />
       </TouchableOpacity>
     </View>
@@ -71,8 +70,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 15,
   },
+  iconButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   centerTabs: {
+    flex: 1,
     flexDirection: "row",
+    justifyContent: 'center',
     gap: 20,
   },
   tabItem: {

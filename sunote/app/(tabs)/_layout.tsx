@@ -10,12 +10,17 @@ import { getToken } from "../../src/context/secureStore"; // SecureStore相关
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useTheme } from "../../src/theme/ThemeContext";
 import { Surface } from "react-native-paper";
-
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import CustomDrawerContent from "../../src/components/CustomDrawerContent";
+import { Dimensions } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+const Drawer = createDrawerNavigator();
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // import userDrawer from "./(drawer)/_layout";
 
 // SplashScreen.preventAutoHideAsync();
-export default function TabLayout() {
+function TabLayout() {
   const token = getToken();
   const theme = useTheme(); // 🔥 获取主题颜色
   const mode = useThemeStore((state) => state.mode);
@@ -83,4 +88,37 @@ export default function TabLayout() {
 
 }
 
+export default function Layout() {
+  const theme = useTheme();
 
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Drawer.Navigator
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
+        screenOptions={{
+          headerShown: false,
+          drawerStyle: {
+            backgroundColor: theme.colors.background,
+            width: SCREEN_WIDTH * 0.8,
+            borderTopRightRadius: 0,  // 去掉右上角圆角
+            borderBottomRightRadius: 0, // 去掉右下角圆角
+          },
+          drawerType: "front",
+          overlayColor: 'rgba(0,0,0,0.5)',
+          swipeEnabled: true,
+
+          drawerPosition: "left",
+          drawerStatusBarAnimation: "slide",
+        }}
+      >
+        <Drawer.Screen 
+          name="tabs" 
+          component={TabLayout}
+          options={{
+            drawerLabel: "主页"
+          }}
+        />
+      </Drawer.Navigator>
+    </GestureHandlerRootView>
+  );
+}

@@ -1,14 +1,15 @@
 import React from "react";
 import { Avatar, Button, Text, List, Appbar, Surface } from "react-native-paper";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useAuthStore } from "../../../src/context/store"; // 根据你的项目结构调整路径
 import { useRouter } from "expo-router";
 import ThemeToggleButton from "../../../src/theme/ThemeToggleButton"; // 调整路径
+import { useTheme } from '../../../src/theme/ThemeContext';
 
 export default function Mine() {
   const removeToken = useAuthStore((s) => s.clearToken); // 自定义 store 中的 removeToken 方法
-
   const router = useRouter();
+  const theme = useTheme();
 
   const handleLogout = () => {
     removeToken(); // 清除 token
@@ -21,7 +22,7 @@ export default function Mine() {
         {/* <Appbar.Content title="个人中心" /> */}
         <ThemeToggleButton />
       </Appbar.Header>
-      <Surface style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Avatar.Image
           size={80}
           source={{
@@ -65,7 +66,7 @@ export default function Mine() {
             left={() => <List.Icon icon="logout" />}
           />
         </List.Section>
-      </Surface>
+      </View>
     </Surface>
   );
 }
