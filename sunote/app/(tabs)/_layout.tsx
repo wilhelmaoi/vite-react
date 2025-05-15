@@ -10,23 +10,12 @@ import { getToken } from "../../src/context/secureStore"; // SecureStore相关
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useTheme } from "../../src/theme/ThemeContext";
 import { Surface } from "react-native-paper";
-import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
-import CustomDrawerContent from "../../src/components/CustomDrawerContent";
-import { Dimensions } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ParamListBase, getFocusedRouteNameFromRoute, RouteProp } from "@react-navigation/native";
 import HomeLayout from "./home/_layout";
 import Message from "./Message"
 import { useNavigationStore } from '../../src/context/store';
-import { useNavigationState } from '@react-navigation/native';
-
-const Drawer = createDrawerNavigator();
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
-// import userDrawer from "./(drawer)/_layout";
 
 // SplashScreen.preventAutoHideAsync();
-function TabLayout() {
+export default function TabLayout() {
   const token = getToken();
   const theme = useTheme(); // 🔥 获取主题颜色
   const mode = useThemeStore((state) => state.mode);
@@ -105,66 +94,4 @@ function TabLayout() {
       <Tabs.Screen name="mine" options={{ title: "我的" ,tabBarIcon: ({ color }) => <AntDesign name="user" size={28}  color={color}  />, headerShown: false}} />
     </Tabs>
   )
-
-}
-
-
-export default function Layout() {
-  const theme = useTheme();
-  const currentTab = useNavigationStore((state) => state.currentTab);
-
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer.Navigator
-        drawerContent={(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />}
-        screenOptions={({ route }: { route: RouteProp<ParamListBase, keyof ParamListBase> }) => {
-          
-          
-          const swipeEnabledScreens = ['hot', 'sub'];
-          const isSwipeEnabled = swipeEnabledScreens.includes(currentTab);
-
-          return {
-            headerShown: false,
-            drawerStyle: {
-              backgroundColor: theme.colors.background,
-              width: SCREEN_WIDTH * 0.8,
-              borderTopRightRadius: 0,
-              borderBottomRightRadius: 0,
-            },
-            drawerType: "front",
-            overlayColor: 'rgba(0,0,0,0.5)',
-            swipeEnabled: isSwipeEnabled,
-            swipeEdgeWidth: isSwipeEnabled ? 30 : 0,
-            drawerPosition: "left",
-            drawerStatusBarAnimation: "slide",
-          };
-        }}
-      >
-        <Drawer.Screen 
-          name="tabs" 
-          component={TabLayout}
-          options={{
-            drawerLabel: "tab路由",
-            swipeEnabled: true,
-          }}
-        />
-        {/* <Drawer.Screen 
-          name="tabs/home" 
-          component={HomeLayout}
-          options={{
-            drawerLabel: "主页",
-            swipeEnabled: true,
-          }}
-        />
-         <Drawer.Screen 
-          name="Message" 
-          component={Message}
-          options={{
-            drawerLabel: "消息",
-            swipeEnabled: false,
-          }}
-        /> */}
-      </Drawer.Navigator>
-    </GestureHandlerRootView>
-  );
 }

@@ -1,60 +1,111 @@
 // app/_layout.tsx
 import React from "react";
 import { useFonts } from "expo-font";
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
-import { useAuthStore, useMaskStore, useThemeStore } from "../src/context/store";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuthStore, useMaskStore, useThemeStore, useNavigationStore } from "../src/context/store";
 import { StatusBar } from "expo-status-bar";
-import { DarkTheme, DefaultTheme, NavigationContainer } from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, NavigationContainer, ParamListBase, RouteProp } from "@react-navigation/native";
 import { useColorScheme } from "react-native";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomDrawerContent from "../src/components/CustomDrawerContent";
-import TabsNavigator from "../src/navigation/TabsNavigator";
-
+import { Dimensions, View } from "react-native";
 
 const Drawer = createDrawerNavigator();
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  // const scheme = useColorScheme();
-  // const paperTheme = scheme === 'dark' ? MD3DarkTheme : MD3LightTheme;
-  const Theme = useTheme(); // 动态导航主题
+// 定义路由组件
+function TabsScreen() {
+  return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="(tabs)" /></Stack>;
+}
+
+function SignInScreen() {
+  return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="sign-in" options={{ presentation: "modal" }} /></Stack>;
+}
+
+function AppContent() {
+  const theme = useTheme();
   const mode = useThemeStore((state) => state.mode);
-  // const toggleTheme = useThemeStore((state) => state.toggleTheme);
-  const { visible } = useMaskStore();
-  const StatusBarColor = visible === false ? "transparent" : "rgba(0, 0, 0, 0.25)"; 
+  const currentTab = useNavigationStore((state) => state.currentTab);
+  const pathname = usePathname();
+  const setCurrentTab = useNavigationStore((state) => state.setCurrentTab);
+  
+  // 从路径中提取当前标签名
+  useEffect(() => {
+    const pathParts = pathname.split('/');
+    const currentTabFromPath = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || '';
+    console.log("当前路径：", pathname);
+    console.log("当前提取的Tab：", currentTabFromPath);
+    setCurrentTab(currentTabFromPath);
+  }, [pathname, setCurrentTab]);
 
   return (
-    <NavigationContainer
-      theme={mode === "dark" ? DarkTheme : DefaultTheme}
-    >
-    <SafeAreaView style={{ flex: 1, backgroundColor: Theme.colors.background }}>
-      <ThemeProvider>
-        {/* 根据主题控制状态栏字色 */}
-        <StatusBar
-          style={mode === "dark" ? "light" : "dark"}
-          // backgroundColor={Theme.colors.background}
-          translucent={true}
-          backgroundColor = {StatusBarColor}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* 状态栏放在抽屉导航之前，这样抽屉可以覆盖状态栏 */}
+      <StatusBar
+        style={mode === "dark" ? "light" : "dark"}
+        translucent={true}
+        backgroundColor="transparent" // 使状态栏透明，让抽屉可以完全覆盖
+      />
+      
+      <Drawer.Navigator
+        drawerContent={(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />}
+        screenOptions={({ route }: { route: RouteProp<ParamListBase, keyof ParamListBase> }) => {
+          const swipeEnabledScreens = ['hot', 'sub'];
+          const isSwipeEnabled = swipeEnabledScreens.includes(currentTab);
+
+          return {
+            headerShown: false,
+            drawerStyle: {
+              backgroundColor: theme.colors.background,
+              width: SCREEN_WIDTH * 0.8,
+              borderTopRightRadius: 0,
+              borderBottomRightRadius: 0,
+            },
+            drawerType: "front",
+            overlayColor: 'rgba(0,0,0,0.5)',
+            swipeEnabled: isSwipeEnabled,
+            swipeEdgeWidth: isSwipeEnabled ? 30 : 0,
+            drawerPosition: "left",
+            drawerStatusBarAnimation: "slide",
+          };
+        }}
+      >
+        <Drawer.Screen 
+          name="tabs" 
+          component={TabsScreen}
+          options={{
+            drawerLabel: "主页",
+            swipeEnabled: true,
+          }}
         />
+        <Drawer.Screen 
+          name="signin" 
+          component={SignInScreen}
+          options={{
+            drawerLabel: "登录",
+            swipeEnabled: false,
+          }}
+        />
+      </Drawer.Navigator>
+    </GestureHandlerRootView>
+  );
+}
 
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="sign-in"
-              options={{
-                presentation: "modal",
-              }}
-            />
-          </Stack>
+export default function RootLayout() {
+  const theme = useTheme();
+  const mode = useThemeStore((state) => state.mode);
 
+  return (
+    <NavigationContainer theme={mode === "dark" ? DarkTheme : DefaultTheme}>
+      <ThemeProvider>
+        <AppContent />
       </ThemeProvider>
-    </SafeAreaView>
     </NavigationContainer>
   );
 }
