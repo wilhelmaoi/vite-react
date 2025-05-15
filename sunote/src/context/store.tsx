@@ -61,3 +61,17 @@ export const useMaskStore = create<ModalStore>((set) => ({
 //   visible: false,
 //   setVisible: (v) => set({ visible: v })
 // }));
+
+
+
+
+// 当前 tab 路由名
+interface NavigationState {
+  currentTab: string;
+  setCurrentTab: (tab: string) => void;
+}
+
+export const useNavigationStore = create<NavigationState>((set) => ({
+  currentTab: '',
+  setCurrentTab: (tab) => set({ currentTab: tab }),
+}));

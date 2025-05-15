@@ -1,7 +1,7 @@
 // app/(tabs)/_layout.tsx
 import React from "react";
 import { useFonts } from "expo-font";
-import { Tabs, Redirect } from "expo-router";
+import { Tabs, Redirect, usePathname } from "expo-router";
 import { useAuthStore, useThemeStore } from "../../src/context/store";
 import { FontAwesome } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
@@ -10,10 +10,16 @@ import { getToken } from "../../src/context/secureStore"; // SecureStore相关
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useTheme } from "../../src/theme/ThemeContext";
 import { Surface } from "react-native-paper";
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
 import CustomDrawerContent from "../../src/components/CustomDrawerContent";
 import { Dimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ParamListBase, getFocusedRouteNameFromRoute, RouteProp } from "@react-navigation/native";
+import HomeLayout from "./home/_layout";
+import Message from "./Message"
+import { useNavigationStore } from '../../src/context/store';
+import { useNavigationState } from '@react-navigation/native';
+
 const Drawer = createDrawerNavigator();
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -24,6 +30,20 @@ function TabLayout() {
   const token = getToken();
   const theme = useTheme(); // 🔥 获取主题颜色
   const mode = useThemeStore((state) => state.mode);
+  
+  const pathname = usePathname();
+  const setCurrentTab = useNavigationStore((state) => state.setCurrentTab);
+  
+  // 从路径中提取当前标签名
+  useEffect(() => {
+    // 路径格式可能是 "/(tabs)/home" 或 "/(tabs)/Message" 等
+    const pathParts = pathname.split('/');
+    // 获取最后一个有效的路径部分作为当前标签
+    const currentTabFromPath = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2] || '';
+    console.log("当前路径：", pathname);
+    console.log("当前提取的Tab：", currentTabFromPath);
+    setCurrentTab(currentTabFromPath);
+  }, [pathname, setCurrentTab]);
 
   if (!token) {
     return <Redirect href="/sign-in" />;
@@ -48,8 +68,8 @@ function TabLayout() {
 
       }}
     >
-      <Tabs.Screen name="home" options={{ title: "首页",tabBarIcon: ({ color }) => <AntDesign name="home" size={28} color={color} />,  headerShown: false,}} />
-      <Tabs.Screen name="DayUp" options={{ title: "打卡" ,tabBarIcon: ({ color }) => <AntDesign name="clockcircleo" size={28}  color={color}  />, headerShown: false}} />
+      <Tabs.Screen name="home" options={{ title: "首页", tabBarIcon: ({ color }) => <AntDesign name="home" size={28} color={color} />, headerShown: false }} />
+      <Tabs.Screen name="DayUp" options={{ title: "打卡", tabBarIcon: ({ color }) => <AntDesign name="clockcircleo" size={28} color={color} />, headerShown: false }} />
       <Tabs.Screen name="Post" 
       options={{  
         tabBarIcon: ({ color }) =>(
@@ -75,7 +95,7 @@ function TabLayout() {
         headerShown: false
       }} 
         />
-      <Tabs.Screen name="Community" 
+      <Tabs.Screen name="Message" 
       options={{ 
         title: "消息" ,
         tabBarIcon: ({ color }) => <AntDesign name="mail" size={28}  color={color} />,
@@ -88,36 +108,62 @@ function TabLayout() {
 
 }
 
+
 export default function Layout() {
   const theme = useTheme();
+  const currentTab = useNavigationStore((state) => state.currentTab);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer.Navigator
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
-        screenOptions={{
-          headerShown: false,
-          drawerStyle: {
-            backgroundColor: theme.colors.background,
-            width: SCREEN_WIDTH * 0.8,
-            borderTopRightRadius: 0,  // 去掉右上角圆角
-            borderBottomRightRadius: 0, // 去掉右下角圆角
-          },
-          drawerType: "front",
-          overlayColor: 'rgba(0,0,0,0.5)',
-          swipeEnabled: true,
+        drawerContent={(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />}
+        screenOptions={({ route }: { route: RouteProp<ParamListBase, keyof ParamListBase> }) => {
+          
+          
+          const swipeEnabledScreens = ['hot', 'sub'];
+          const isSwipeEnabled = swipeEnabledScreens.includes(currentTab);
 
-          drawerPosition: "left",
-          drawerStatusBarAnimation: "slide",
+          return {
+            headerShown: false,
+            drawerStyle: {
+              backgroundColor: theme.colors.background,
+              width: SCREEN_WIDTH * 0.8,
+              borderTopRightRadius: 0,
+              borderBottomRightRadius: 0,
+            },
+            drawerType: "front",
+            overlayColor: 'rgba(0,0,0,0.5)',
+            swipeEnabled: isSwipeEnabled,
+            swipeEdgeWidth: isSwipeEnabled ? 30 : 0,
+            drawerPosition: "left",
+            drawerStatusBarAnimation: "slide",
+          };
         }}
       >
         <Drawer.Screen 
           name="tabs" 
           component={TabLayout}
           options={{
-            drawerLabel: "主页"
+            drawerLabel: "tab路由",
+            swipeEnabled: true,
           }}
         />
+        {/* <Drawer.Screen 
+          name="tabs/home" 
+          component={HomeLayout}
+          options={{
+            drawerLabel: "主页",
+            swipeEnabled: true,
+          }}
+        />
+         <Drawer.Screen 
+          name="Message" 
+          component={Message}
+          options={{
+            drawerLabel: "消息",
+            swipeEnabled: false,
+          }}
+        /> */}
       </Drawer.Navigator>
     </GestureHandlerRootView>
   );

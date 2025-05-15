@@ -26,7 +26,7 @@ const Drawer = createDrawerNavigator();
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // SplashScreen.preventAutoHideAsync();
-export default function TabsLayout() {
+export default function HomeLayout() {
   const theme = useTheme();
 
   return (

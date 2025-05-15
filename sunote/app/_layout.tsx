@@ -15,6 +15,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomDrawerContent from "../src/components/CustomDrawerContent";
 import TabsNavigator from "../src/navigation/TabsNavigator";
 
+
 const Drawer = createDrawerNavigator();
 
 // SplashScreen.preventAutoHideAsync();
@@ -44,7 +45,6 @@ export default function RootLayout() {
 
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(drawer)" />
             <Stack.Screen
               name="sign-in"
               options={{

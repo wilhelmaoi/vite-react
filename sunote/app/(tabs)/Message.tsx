@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 import { Surface,Text } from 'react-native-paper';
 
 
-export default function Community() {
+export default function Message() {
   return (
     <Surface style={styles.container}>
       <Text>Community Screen</Text>
