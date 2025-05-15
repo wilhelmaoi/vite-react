@@ -9,10 +9,14 @@
     "newArchEnabled": true,
     "scheme": "sunotedemo",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "需要访问相册以保存支付码图片"
+      }
     },
     "android": {
-      "package": "com.wilhelmaoi.sunotedemo"
+      "package": "com.wilhelmaoi.sunotedemo",
+      "permissions": ["WRITE_EXTERNAL_STORAGE"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,7 +33,16 @@
       ],
       "react-native-edge-to-edge",
       "expo-secure-store",
-      "expo-router"
+      "expo-router",
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ],
     "extra": {
       "eas": {

@@ -1,5 +1,12 @@
 import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  StatusBar,
+  Platform,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeContext";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
@@ -11,10 +18,24 @@ export default function CustomTopTabBar(props: any) {
   const theme = useTheme();
   const drawerNavigation = useNavigation();
 
+  // 获取状态栏高度增加了状态栏高度的动态计算：
+  // 在 iOS 上使用固定值 44
+  // 在 Android 上使用 StatusBar.currentHeight 或默认值 24
+  const STATUSBAR_HEIGHT =
+    Platform.OS === "ios" ? 44 : StatusBar.currentHeight || 24;
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.background,
+          paddingTop: STATUSBAR_HEIGHT + 0, // 状态栏高度 + 额外边距
+        },
+      ]}
+    >
       {/* 左侧按钮 */}
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => drawerNavigation.dispatch(DrawerActions.openDrawer())}
         style={styles.iconButton}
       >
@@ -30,7 +51,7 @@ export default function CustomTopTabBar(props: any) {
 
           const onPress = () => {
             const event = navigation.emit({
-              type: 'tabPress',
+              type: "tabPress",
               target: route.key,
               canPreventDefault: true,
             });
@@ -44,9 +65,22 @@ export default function CustomTopTabBar(props: any) {
             <TouchableOpacity
               key={route.key}
               onPress={onPress}
-              style={[styles.tabItem, isFocused && { ...styles.tabItemActive, borderBottomColor: theme.colors.primary }]}
+              style={[
+                styles.tabItem,
+                isFocused && {
+                  ...styles.tabItemActive,
+                  borderBottomColor: theme.colors.primary,
+                },
+              ]}
             >
-              <Text style={{ color: isFocused ? theme.colors.primary : theme.colors.secondary, fontSize: 16 }}>
+              <Text
+                style={{
+                  color: isFocused
+                    ? theme.colors.primary
+                    : theme.colors.secondary,
+                  fontSize: 16,
+                }}
+              >
                 {label}
               </Text>
             </TouchableOpacity>
@@ -64,22 +98,23 @@ export default function CustomTopTabBar(props: any) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 60,
+    // minHeight: 60,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 15,
+    paddingBottom: 10, // 底部也增加一些间距
   },
   iconButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   centerTabs: {
     flex: 1,
     flexDirection: "row",
-    justifyContent: 'center',
+    justifyContent: "center",
     gap: 20,
   },
   tabItem: {

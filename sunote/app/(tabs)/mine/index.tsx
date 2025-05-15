@@ -26,9 +26,9 @@ export default function Mine() {
         <Avatar.Image
           size={80}
           source={{
-            uri: "https://cdn-icons-png.flaticon.com/512/2111/2111370.png",
+            uri: "https://raw.githubusercontent.com/wilhelmaoi/assets/ae663e7a1ef975e17915e2ab7536d6a7269a01fe/sunote/avatar.jpg",
           }}
-          style={{ backgroundColor: "#fff" }}
+          // style={{ backgroundColor: "#fff" }}
         />
         <Avatar.Text
           size={24}

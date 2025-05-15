@@ -39,10 +39,10 @@ export default function HomeLayout() {
         tabBarInactiveTintColor: theme.colors.secondary,
         tabBarLabelStyle: { fontSize: 16 },
         tabBarStyle: {
-          height: 60,
+          // height: 60,
           backgroundColor: theme.colors.background,
-          borderBottomWidth: 0,
-          elevation: 0,
+          // borderBottomWidth: 0,
+          // elevation: 0,
         },
         tabBarShowLabel: true,
         tabBarIconStyle: {
@@ -53,14 +53,14 @@ export default function HomeLayout() {
       <Tabs.Screen
         name="hot"
         options={{
-          title: "首页",
+          title: "热门",
           headerShown: false,
         }}
       />
       <Tabs.Screen
         name="sub"
         options={{
-          title: "消息",
+          title: "关注",
           headerShown: false,
         }}
       />

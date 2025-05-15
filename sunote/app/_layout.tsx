@@ -7,12 +7,13 @@ import { useEffect } from "react";
 import { useAuthStore, useMaskStore, useThemeStore, useNavigationStore } from "../src/context/store";
 import { StatusBar } from "expo-status-bar";
 import { DarkTheme, DefaultTheme, NavigationContainer, ParamListBase, RouteProp } from "@react-navigation/native";
-import { useColorScheme } from "react-native";
+import {  useColorScheme } from "react-native";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomDrawerContent from "../src/components/CustomDrawerContent";
 import { Dimensions, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Drawer = createDrawerNavigator();
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -46,7 +47,6 @@ function AppContent() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* 状态栏放在抽屉导航之前，这样抽屉可以覆盖状态栏 */}
       <StatusBar
         style={mode === "dark" ? "light" : "dark"}
         translucent={true}
@@ -93,6 +93,7 @@ function AppContent() {
           }}
         />
       </Drawer.Navigator>
+
     </GestureHandlerRootView>
   );
 }
@@ -103,9 +104,11 @@ export default function RootLayout() {
 
   return (
     <NavigationContainer theme={mode === "dark" ? DarkTheme : DefaultTheme}>
+      <SafeAreaView style={{ flex: 1,backgroundColor:theme.colors.background  }} edges={['bottom']}>
       <ThemeProvider>
         <AppContent />
       </ThemeProvider>
+      </SafeAreaView>
     </NavigationContainer>
   );
 }

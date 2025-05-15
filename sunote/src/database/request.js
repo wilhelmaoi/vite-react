@@ -1,7 +1,7 @@
 // database/request.ts
 import axios from 'axios';
 // 假设你zustand的authStore这么导出
-import { useAuthStore } from '@/context/store';
+import { useAuthStore } from '../context/store';
 import { useNavigation } from '@react-navigation/native'
 
 const request = axios.create({
