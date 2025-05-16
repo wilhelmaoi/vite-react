@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CustomDrawerContent from "../src/components/CustomDrawerContent";
 import { Dimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { initDatabase } from "../src/database/sqlite"; // 导入初始化数据库函数
 
 const Drawer = createDrawerNavigator();
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -101,6 +102,11 @@ function AppContent() {
 export default function RootLayout() {
   const theme = useTheme();
   const mode = useThemeStore((state) => state.mode);
+
+  // 应用启动时初始化数据库
+  useEffect(() => {
+    initDatabase();
+  }, []);
 
   return (
     <NavigationContainer theme={mode === "dark" ? DarkTheme : DefaultTheme}>

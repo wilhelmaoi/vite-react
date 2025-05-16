@@ -29,6 +29,12 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import RegisterForm from "./register";
+import { saveUser, User } from "../src/database/sqlite";
+
+
+
+
+
 // 登录成功后的处理
 async function onLoginSuccess(
   token: string,
@@ -43,6 +49,18 @@ async function onLoginSuccess(
   await saveToken(token);
   await saveAccount(username);
   await savePassword(password);
+
+  const response = await request.post("/user/info", {
+    username,
+    password
+  });
+
+  const user: User = response.data.data;
+  if (user) {
+    saveUser(user); // 存入sqlite
+    authStore.setUser(user); // 存入 store
+  }
+
 }
 
 export default function SignIn() {

@@ -1,20 +1,131 @@
-import React from "react";
+// app/mine/index.tsx
+import React, { useEffect, useState } from "react";
 import { Avatar, Button, Text, List, Appbar, Surface } from "react-native-paper";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, TouchableOpacity, Alert } from "react-native";
 import { useAuthStore } from "../../../src/context/store"; // 根据你的项目结构调整路径
 import { useRouter } from "expo-router";
 import ThemeToggleButton from "../../../src/theme/ThemeToggleButton"; // 调整路径
 import { useTheme } from '../../../src/theme/ThemeContext';
+import request from "../../../src/database/request";
+import * as FileSystem from "expo-file-system";
+import { getAccount } from "../../../src/context/secureStore";
+import AvatarPreview from "../../../src/components/AvatarPreview";
+
+import { getUser, User, saveUser } from "../../../src/database/sqlite";
+
+
+const LOCAL_AVATAR_PATH = FileSystem.cacheDirectory + "avatar.jpg";
 
 export default function Mine() {
-  const removeToken = useAuthStore((s) => s.clearToken); // 自定义 store 中的 removeToken 方法
+  const authStore = useAuthStore.getState();
+  const user = authStore.user;
   const router = useRouter();
   const theme = useTheme();
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
 
   const handleLogout = () => {
-    removeToken(); // 清除 token
+    authStore.logout();
     router.replace("/sign-in"); // 使用 replace 防止用户回退
   };
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  useEffect(() => {
+    // 头像管理逻辑
+    const manageAvatar = async () => {
+      // 1. 先检查本地缓存是否存在
+      const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
+      
+      if (fileInfo.exists) {
+        // 如果本地有缓存，直接使用
+        console.log("使用本地缓存头像");
+        setAvatarUri(LOCAL_AVATAR_PATH);
+        return;
+      }
+      
+      // 2. 如果本地没有，但 user.avatar 有值，则下载并缓存
+      if (user?.avatar) {
+        try {
+          console.log("下载并缓存头像");
+          // 下载头像
+          const { uri } = await FileSystem.downloadAsync(
+            user.avatar,
+            LOCAL_AVATAR_PATH
+          );
+          setAvatarUri(uri);
+          return;
+        } catch (error) {
+          console.error("下载头像失败:", error);
+          // 下载失败，继续尝试其他方法
+        }
+      }
+      
+      // 3. 如果上面都失败，尝试从服务器获取
+      try {
+        console.log("从服务器获取头像");
+        const response = await request.get("/user/avatar", {
+          responseType: "arraybuffer",
+        });
+        
+        // 将二进制转为 base64
+        const base64 = Buffer.from(response.data).toString("base64");
+        
+        // 保存到本地
+        await FileSystem.writeAsStringAsync(
+          LOCAL_AVATAR_PATH, 
+          base64, 
+          { encoding: FileSystem.EncodingType.Base64 }
+        );
+        
+        setAvatarUri(LOCAL_AVATAR_PATH);
+      } catch (error) {
+        console.error("获取服务器头像失败:", error);
+        // 所有尝试都失败，使用默认头像
+        setAvatarUri(null);
+      }
+    };
+    
+    manageAvatar();
+  }, [user?.avatar]); // 当 user.avatar 变化时重新获取
+
+  // 处理头像变更
+  const handleAvatarChange = async (newAvatarUri: string) => {
+    try {
+      setAvatarUri(newAvatarUri);
+      
+      // 准备上传到服务器
+      const formData = new FormData();
+      formData.append('avatar', {
+        uri: newAvatarUri,
+        name: 'avatar.jpg',
+        type: 'image/jpeg'
+      } as any);
+      
+      // 上传头像到服务器
+      const response = await request.post('/user/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.code === 200) {
+        // 更新本地用户信息
+        if (user) {
+          const updatedUser: User = {
+            ...user,
+            avatar: newAvatarUri
+          };
+          saveUser(updatedUser);
+          authStore.setUser(updatedUser);
+        }
+        Alert.alert('成功', '头像已更新');
+      } else {
+        throw new Error(response.data.msg || '上传失败');
+      }
+    } catch (error) {
+      console.error('更新头像失败:', error);
+      Alert.alert('更新失败', '头像更新失败，请稍后再试');
+    }
+  };
+
 
   return (
     <Surface style={{ flex: 1 }}>
@@ -23,20 +134,26 @@ export default function Mine() {
         <ThemeToggleButton />
       </Appbar.Header>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Avatar.Image
-          size={80}
-          source={{
-            uri: "https://raw.githubusercontent.com/wilhelmaoi/assets/ae663e7a1ef975e17915e2ab7536d6a7269a01fe/sunote/avatar.jpg",
-          }}
-          // style={{ backgroundColor: "#fff" }}
-        />
-        <Avatar.Text
-          size={24}
-          label="在线"
-          style={styles.statusIndicator}
-          color="#fff"/>
-        <Text style={styles.username}>wilhelmaoi</Text>
-        <Text style={styles.tag}>wilhelmaoi#1234</Text>
+        <TouchableOpacity 
+          onPress={() => setShowAvatarPreview(true)}
+          activeOpacity={0.7}
+        >
+          <Avatar.Image
+            size={80}
+            source={
+              user?.avatar
+              ? { uri: user.avatar }
+              : require("../../../src/assets/avatar.jpg")
+            }
+          />
+          <Avatar.Text
+            size={24}
+            label="在线"
+            style={styles.statusIndicator}
+            color="#fff"/>
+        </TouchableOpacity>
+        <Text style={styles.username}>{user?.username ?? "未登录"}</Text>
+        <Text style={styles.tag}>{user?.bio ?? "暂无签名"}</Text>
 
         <Button mode="contained" style={styles.button}>
           编辑个人资料
@@ -45,7 +162,7 @@ export default function Mine() {
         <List.Section style={styles.list}>
           <List.Item
             title="成员加入时间"
-            description="2017年8月27日"
+            description={user?.birthday ?? "未知"}
             left={() => <List.Icon icon="calendar" />}
           />
           <List.Item
@@ -66,6 +183,15 @@ export default function Mine() {
             left={() => <List.Icon icon="logout" />}
           />
         </List.Section>
+        
+        {/* 头像预览模态框 */}
+        <AvatarPreview
+          visible={showAvatarPreview}
+          imageUri={avatarUri || user?.avatar || null}
+          defaultImage={require("../../../src/assets/avatar.jpg")}
+          onClose={() => setShowAvatarPreview(false)}
+          onAvatarChange={handleAvatarChange}
+        />
       </View>
     </Surface>
   );
