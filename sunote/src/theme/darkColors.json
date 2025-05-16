@@ -29,6 +29,7 @@
       "inverseSurface": "rgb(231, 225, 229)",
       "inverseOnSurface": "rgb(50, 47, 51)",
       "inversePrimary": "rgb(120, 69, 172)",
+      "text": "rgb(231, 225, 229)",
       "elevation": {
         "level0": "transparent",
         "level1": "rgb(39, 35, 41)",
