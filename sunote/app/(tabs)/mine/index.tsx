@@ -9,9 +9,15 @@ import { useTheme } from '../../../src/theme/ThemeContext';
 import request from "../../../src/database/request";
 import * as FileSystem from "expo-file-system";
 import { getAccount } from "../../../src/context/secureStore";
+<<<<<<< HEAD
 import AvatarPreview from "../../../src/components/AvatarPreview";
 
 import { getUser, User, saveUser } from "../../../src/database/sqlite";
+=======
+
+
+import { getUser, User } from "../../../src/database/sqlite";
+>>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
 
 
 const LOCAL_AVATAR_PATH = FileSystem.cacheDirectory + "avatar.jpg";
@@ -86,6 +92,7 @@ export default function Mine() {
     manageAvatar();
   }, [user?.avatar]); // 当 user.avatar 变化时重新获取
 
+<<<<<<< HEAD
   // 处理头像变更
   const handleAvatarChange = async (newAvatarUri: string) => {
     try {
@@ -126,6 +133,8 @@ export default function Mine() {
     }
   };
 
+=======
+>>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
 
   return (
     <Surface style={{ flex: 1 }}>
@@ -134,6 +143,7 @@ export default function Mine() {
         <ThemeToggleButton />
       </Appbar.Header>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+<<<<<<< HEAD
         <TouchableOpacity 
           onPress={() => setShowAvatarPreview(true)}
           activeOpacity={0.7}
@@ -152,6 +162,22 @@ export default function Mine() {
             style={styles.statusIndicator}
             color="#fff"/>
         </TouchableOpacity>
+=======
+        <Avatar.Image
+          size={80}
+          source={
+            user?.avatar
+            ? { uri: user.avatar }
+            : require("../../../src/assets/avatar.jpg")
+          }
+          // style={{ backgroundColor: "#fff" }}
+        />
+        <Avatar.Text
+          size={24}
+          label="在线"
+          style={styles.statusIndicator}
+          color="#fff"/>
+>>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
         <Text style={styles.username}>{user?.username ?? "未登录"}</Text>
         <Text style={styles.tag}>{user?.bio ?? "暂无签名"}</Text>
 
