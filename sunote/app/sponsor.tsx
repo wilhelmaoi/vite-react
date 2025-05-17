@@ -120,11 +120,7 @@ export default function SponsorScreen() {
         <View style={styles.modalBg}>
           <View style={styles.modalContent}>
             <Text
-<<<<<<< HEAD
               style={{ fontSize: 18, fontWeight: "bold",marginBottom: 10,color:"#333333" }}
-=======
-              style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10,color:theme.colors.inverseOnSurface }}
->>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
             >
               请用支付宝扫码支付
             </Text>

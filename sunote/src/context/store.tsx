@@ -8,11 +8,13 @@ interface AuthState {
   username: string;
   password: string;
   user: User | null;  // 新增 user 字段
+  avatarUri: string | null;  // 新增 avatarUri
   setToken: (token: string) => void;
   clearToken: () => void;
   setUsername: (username: string) => void;
   setPassword: (password: string) => void;
   setUser: (user: User) => void;  // 新增 setUser 方法
+  setAvatarUri: (uri: string | null) => void;  // 新增 setAvatarUri
   logout: () => void;
 }
 
@@ -21,12 +23,20 @@ export const useAuthStore = create<AuthState>((set) => ({
   username: '',
   password: '',
   user: null,  // 初始值为 null
+  avatarUri: null,  // 初始值为 null
   setToken: (token) => set({ token }),
   clearToken: () => set({ token: null }),
   setUsername: (username) => set({ username }),
   setPassword: (password) => set({ password }),
   setUser: (user) => set({ user }),  // 新增 setUser
-  logout: () => set({ token: null, username: '', password: '', user: null }),
+  setAvatarUri: (uri) => set({ avatarUri: uri }),  // 新增 setAvatarUri
+  logout: () => set({ 
+    token: null, 
+    username: '', 
+    password: '', 
+    user: null,
+    avatarUri: null  // 登出时清除头像
+  }),
 }));
 
 

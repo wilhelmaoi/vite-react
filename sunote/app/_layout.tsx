@@ -51,7 +51,6 @@ function AppContent() {
       <StatusBar
         style={mode === "dark" ? "light" : "dark"}
         translucent={true}
-        backgroundColor="transparent" // 使状态栏透明，让抽屉可以完全覆盖
       />
       
       <Drawer.Navigator

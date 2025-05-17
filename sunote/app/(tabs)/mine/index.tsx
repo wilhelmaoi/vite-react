@@ -8,16 +8,11 @@ import ThemeToggleButton from "../../../src/theme/ThemeToggleButton"; // 调整�
 import { useTheme } from '../../../src/theme/ThemeContext';
 import request from "../../../src/database/request";
 import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from 'expo-media-library';
 import { getAccount } from "../../../src/context/secureStore";
-<<<<<<< HEAD
 import AvatarPreview from "../../../src/components/AvatarPreview";
 
 import { getUser, User, saveUser } from "../../../src/database/sqlite";
-=======
-
-
-import { getUser, User } from "../../../src/database/sqlite";
->>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
 
 
 const LOCAL_AVATAR_PATH = FileSystem.cacheDirectory + "avatar.jpg";
@@ -33,75 +28,130 @@ export default function Mine() {
     authStore.logout();
     router.replace("/sign-in"); // 使用 replace 防止用户回退
   };
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+  // 检查并请求文件系统权限
+  const checkAndRequestPermissions = async () => {
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          '需要权限',
+          '应用需要访问媒体库权限来管理头像，请在系统设置中授予权限',
+          [
+            {
+              text: '确定',
+              style: 'default',
+            }
+          ]
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('权限检查失败:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     // 头像管理逻辑
     const manageAvatar = async () => {
-      // 1. 先检查本地缓存是否存在
-      const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
-      
-      if (fileInfo.exists) {
-        // 如果本地有缓存，直接使用
-        console.log("使用本地缓存头像");
-        setAvatarUri(LOCAL_AVATAR_PATH);
-        return;
-      }
-      
-      // 2. 如果本地没有，但 user.avatar 有值，则下载并缓存
-      if (user?.avatar) {
-        try {
-          console.log("下载并缓存头像");
-          // 下载头像
-          const { uri } = await FileSystem.downloadAsync(
-            user.avatar,
-            LOCAL_AVATAR_PATH
-          );
-          setAvatarUri(uri);
-          return;
-        } catch (error) {
-          console.error("下载头像失败:", error);
-          // 下载失败，继续尝试其他方法
-        }
-      }
-      
-      // 3. 如果上面都失败，尝试从服务器获取
       try {
-        console.log("从服务器获取头像");
-        const response = await request.get("/user/avatar", {
-          responseType: "arraybuffer",
-        });
+        // 首先检查权限
+        const hasPermission = await checkAndRequestPermissions();
+        if (!hasPermission) {
+          console.log('没有必要的权限，使用默认头像');
+          return;
+        }
+
+        // 确保缓存目录存在
+        const cacheDir = FileSystem.cacheDirectory;
+        if (!cacheDir) {
+          console.error('无法获取缓存目录');
+          return;
+        }
+
+        // 1. 先检查本地缓存是否存在
+        const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
+        console.log('缓存文件信息:', fileInfo);
         
-        // 将二进制转为 base64
-        const base64 = Buffer.from(response.data).toString("base64");
+        if (fileInfo.exists) {
+          try {
+            // 验证文件是否可读
+            const fileContent = await FileSystem.readAsStringAsync(LOCAL_AVATAR_PATH, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            if (fileContent) {
+              console.log("使用本地缓存头像，文件大小:", fileInfo.size);
+              authStore.setAvatarUri(LOCAL_AVATAR_PATH);
+              return;
+            }
+          } catch (readError) {
+            console.error("读取本地头像文件失败:", readError);
+            // 如果读取失败，删除可能损坏的文件
+            await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+          }
+        }
         
-        // 保存到本地
-        await FileSystem.writeAsStringAsync(
-          LOCAL_AVATAR_PATH, 
-          base64, 
-          { encoding: FileSystem.EncodingType.Base64 }
-        );
+        // 2. 如果本地没有或文件损坏，但 user.avatar 有值，则下载并缓存
+        if (user?.avatar) {
+          try {
+            console.log("下载并缓存头像");
+            // 下载头像
+            const { uri } = await FileSystem.downloadAsync(
+              user.avatar,
+              LOCAL_AVATAR_PATH,
+              {
+                md5: true, // 启用 MD5 校验
+                cache: true // 启用缓存
+              }
+            );
+            
+            // 验证下载的文件
+            const downloadedFileInfo = await FileSystem.getInfoAsync(uri);
+            console.log('下载的文件信息:', downloadedFileInfo);
+            
+            if (downloadedFileInfo.exists && downloadedFileInfo.size > 0) {
+              authStore.setAvatarUri(uri);
+              return;
+            }
+          } catch (error) {
+            console.error("下载头像失败:", error);
+          }
+        }
         
-        setAvatarUri(LOCAL_AVATAR_PATH);
+        // 3. 如果上面都失败，使用默认头像
+        console.log("使用默认头像");
       } catch (error) {
-        console.error("获取服务器头像失败:", error);
-        // 所有尝试都失败，使用默认头像
-        setAvatarUri(null);
+        console.error("头像管理过程出错:", error);
       }
     };
     
     manageAvatar();
   }, [user?.avatar]); // 当 user.avatar 变化时重新获取
 
-<<<<<<< HEAD
   // 处理头像变更
   const handleAvatarChange = async (newAvatarUri: string) => {
     try {
-      setAvatarUri(newAvatarUri);
+      // 验证新头像文件
+      const fileInfo = await FileSystem.getInfoAsync(newAvatarUri);
+      if (!fileInfo.exists) {
+        throw new Error('新头像文件不存在');
+      }
+
+      // 复制到缓存目录
+      const newPath = FileSystem.cacheDirectory + 'new_avatar_' + Date.now() + '.jpg';
+      await FileSystem.copyAsync({
+        from: newAvatarUri,
+        to: newPath
+      });
+
+      authStore.setAvatarUri(newPath);
       
       // 准备上传到服务器
       const formData = new FormData();
       formData.append('avatar', {
-        uri: newAvatarUri,
+        uri: newPath,
         name: 'avatar.jpg',
         type: 'image/jpeg'
       } as any);
@@ -118,7 +168,7 @@ export default function Mine() {
         if (user) {
           const updatedUser: User = {
             ...user,
-            avatar: newAvatarUri
+            avatar: newPath
           };
           saveUser(updatedUser);
           authStore.setUser(updatedUser);
@@ -133,9 +183,6 @@ export default function Mine() {
     }
   };
 
-=======
->>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
-
   return (
     <Surface style={{ flex: 1 }}>
       <Appbar.Header>
@@ -143,7 +190,6 @@ export default function Mine() {
         <ThemeToggleButton />
       </Appbar.Header>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-<<<<<<< HEAD
         <TouchableOpacity 
           onPress={() => setShowAvatarPreview(true)}
           activeOpacity={0.7}
@@ -151,8 +197,8 @@ export default function Mine() {
           <Avatar.Image
             size={80}
             source={
-              user?.avatar
-              ? { uri: user.avatar }
+              authStore.avatarUri
+              ? { uri: authStore.avatarUri }
               : require("../../../src/assets/avatar.jpg")
             }
           />
@@ -162,23 +208,7 @@ export default function Mine() {
             style={styles.statusIndicator}
             color="#fff"/>
         </TouchableOpacity>
-=======
-        <Avatar.Image
-          size={80}
-          source={
-            user?.avatar
-            ? { uri: user.avatar }
-            : require("../../../src/assets/avatar.jpg")
-          }
-          // style={{ backgroundColor: "#fff" }}
-        />
-        <Avatar.Text
-          size={24}
-          label="在线"
-          style={styles.statusIndicator}
-          color="#fff"/>
->>>>>>> 5bd1264b03b15e973df9fdeadf58c241b01cf309
-        <Text style={styles.username}>{user?.username ?? "未登录"}</Text>
+        <Text style={styles.username}>{user?.nickname ?? "未登录"}</Text>
         <Text style={styles.tag}>{user?.bio ?? "暂无签名"}</Text>
 
         <Button mode="contained" style={styles.button}>
@@ -213,7 +243,7 @@ export default function Mine() {
         {/* 头像预览模态框 */}
         <AvatarPreview
           visible={showAvatarPreview}
-          imageUri={avatarUri || user?.avatar || null}
+          imageUri={authStore.avatarUri}
           defaultImage={require("../../../src/assets/avatar.jpg")}
           onClose={() => setShowAvatarPreview(false)}
           onAvatarChange={handleAvatarChange}

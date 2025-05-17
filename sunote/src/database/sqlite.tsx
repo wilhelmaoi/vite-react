@@ -8,6 +8,7 @@ export interface User {
     id?: number;           // 可选，数据库自增
     username: string;
     password: string;
+    nickname: string;
     email?: string;
     phone?: string;
     avatar?: string;
