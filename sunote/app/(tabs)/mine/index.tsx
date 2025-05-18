@@ -99,15 +99,22 @@ export default function Mine() {
               // 获取后端返回的时间戳，Java类avatarUpdatedAt对应的JSON字段可能是avatarUpdatedAt
               let serverTimestamp = 0;
               if (serverUser.avatarUpdatedAt) {
-                serverTimestamp = serverUser.avatarUpdatedAt;
-                console.log("服务器端头像更新时间戳:", serverTimestamp);
+                // 如果是日期字符串，转换为时间戳数字
+                serverTimestamp = typeof serverUser.avatarUpdatedAt === 'string'
+                  ? new Date(serverUser.avatarUpdatedAt).getTime()
+                  : serverUser.avatarUpdatedAt;
+                console.log("服务器端头像更新时间戳:", serverUser.avatarUpdatedAt);
+                console.log("转换后的服务器时间戳:", serverTimestamp);
               }
               
               // 获取本地存储的时间戳
               let localTimestamp = 0;
               if (user.avatarUpdatedAt) {
-                localTimestamp = user.avatarUpdatedAt;
-                console.log("本地头像更新时间戳:", localTimestamp);
+                localTimestamp = typeof user.avatarUpdatedAt === 'string' 
+                  ? new Date(user.avatarUpdatedAt).getTime() 
+                  : user.avatarUpdatedAt;
+                console.log("本地头像更新时间戳:", user.avatarUpdatedAt);
+                console.log("转换后的本地时间戳:", localTimestamp);
               }
               
               // 如果服务器头像更新时间比本地新，或者本地无头像但服务器有
@@ -116,11 +123,13 @@ export default function Mine() {
                 
                 // 清除旧头像
                 await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+                console.log("已删除旧头像缓存:", LOCAL_AVATAR_PATH);
                 
                 // 下载新头像
                 if (serverAvatarUrl) {
-                  // 构建带有防缓存参数的URL
+                  // 构建带有防缓存参数的URL（确保使用转换后的时间戳数字）
                   const avatarUrlWithCache = `${serverAvatarUrl}?t=${serverTimestamp}`;
+                  console.log("准备下载新头像：", avatarUrlWithCache);
                   
                   const { uri } = await FileSystem.downloadAsync(
                     avatarUrlWithCache,
@@ -150,12 +159,14 @@ export default function Mine() {
                     return;
                   }
                 }
-              } else if (localFileInfo.exists) {
-                // 本地缓存是最新的，直接使用
-                console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
-                setAvatarUri(LOCAL_AVATAR_PATH);
-                return;
               }
+              // } else if (localFileInfo.exists) {
+              //   // 本地缓存是最新的，直接使用
+              //   console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
+              //   console.log("本地缓存头像详细信息:", localFileInfo);
+              //   setAvatarUri(LOCAL_AVATAR_PATH);
+              //   return;
+              // }
             }
           } catch (error) {
             console.error("获取最新用户信息失败:", error);
@@ -166,53 +177,53 @@ export default function Mine() {
         // 下面是原有逻辑，作为备用方案
 
         // 1. 先检查本地缓存是否存在
-        if (localFileInfo.exists) {
-          try {
-            // 验证文件是否可读
-            const fileContent = await FileSystem.readAsStringAsync(LOCAL_AVATAR_PATH, {
-              encoding: FileSystem.EncodingType.Base64,
-            });
-            if (fileContent) {
-              console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
-              setAvatarUri(LOCAL_AVATAR_PATH);  // 使用 hook 获取的函数
-              return;
-            }
-          } catch (readError) {
-            console.error("读取本地头像文件失败:", readError);
-            // 如果读取失败，删除可能损坏的文件
-            await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
-          }
-        }
+        // if (localFileInfo.exists) {
+        //   try {
+        //     // 验证文件是否可读
+        //     const fileContent = await FileSystem.readAsStringAsync(LOCAL_AVATAR_PATH, {
+        //       encoding: FileSystem.EncodingType.Base64,
+        //     });
+        //     if (fileContent) {
+        //       console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
+        //       setAvatarUri(LOCAL_AVATAR_PATH);  // 使用 hook 获取的函数
+        //       return;
+        //     }
+        //   } catch (readError) {
+        //     console.error("读取本地头像文件失败:", readError);
+        //     // 如果读取失败，删除可能损坏的文件
+        //     await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+        //   }
+        // }
         
-        // 2. 如果本地没有或文件损坏，但 user.avatar 有值，则下载并缓存
-        if (user?.avatar) {
-          try {
-            console.log("下载并缓存头像");
-            // 下载头像
-            const { uri } = await FileSystem.downloadAsync(
-              user.avatar,
-              LOCAL_AVATAR_PATH,
-              {
-                md5: true, // 启用 MD5 校验
-                cache: true // 启用缓存
-              }
-            );
+        // // 2. 如果本地没有或文件损坏，但 user.avatar 有值，则下载并缓存
+        // if (user?.avatar) {
+        //   try {
+        //     console.log("下载并缓存头像");
+        //     // 下载头像
+        //     const { uri } = await FileSystem.downloadAsync(
+        //       user.avatar,
+        //       LOCAL_AVATAR_PATH,
+        //       {
+        //         md5: true, // 启用 MD5 校验
+        //         cache: true // 启用缓存
+        //       }
+        //     );
             
-            // 验证下载的文件
-            const downloadedFileInfo = await FileSystem.getInfoAsync(uri);
-            console.log('下载的文件信息:', downloadedFileInfo);
+        //     // 验证下载的文件
+        //     const downloadedFileInfo = await FileSystem.getInfoAsync(uri);
+        //     console.log('下载的文件信息:', downloadedFileInfo);
             
-            if (downloadedFileInfo.exists && downloadedFileInfo.size > 0) {
-              setAvatarUri(uri);
-              return;
-            }
-          } catch (error) {
-            console.error("下载头像失败:", error);
-          }
-        }
+        //     if (downloadedFileInfo.exists && downloadedFileInfo.size > 0) {
+        //       setAvatarUri(uri);
+        //       return;
+        //     }
+        //   } catch (error) {
+        //     console.error("下载头像失败:", error);
+        //   }
+        // }
         
         // 3. 如果上面都失败，使用默认头像
-        console.log("使用默认头像");
+    //     console.log("使用默认头像");
       } catch (error) {
         console.error("头像管理过程出错:", error);
       }
@@ -223,7 +234,7 @@ export default function Mine() {
   useEffect(() => {
 
     manageAvatar();
-  },  [user?.avatar, avatarUri, user?.username]);  // 添加 user?.username 作为依赖
+  },  [ user?.avatar]);  // 添加 user?.username 作为依赖
 
   // 处理头像变更
   const handleAvatarChange = async (newAvatarUri: string) => {
@@ -267,25 +278,30 @@ export default function Mine() {
         // 从响应中获取云端URL和时间戳
         const responseData = response.data.data;
         const avatarUrl = responseData.avatarUrl || responseData;
-        const timestamp = responseData.timestamp || Date.now();
+        const timestamp = responseData.timestamp || Date.now(); // 使用毫秒级时间戳
         
         // 更新本地用户信息
         if (user) {
+          // 添加日志检查时间戳类型
+          console.log("更新头像时间戳类型:", typeof timestamp, "值:", timestamp);
+          
           const updatedUser: User = {
             ...user,
             avatar: avatarUrl,
-            avatarUpdatedAt: timestamp
+            avatarUpdatedAt: timestamp // 使用原始时间戳值
           };
           saveUser(updatedUser);
           setUser(updatedUser);
         }
         
         // 删除旧的本地缓存，强制重新下载
-        await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+        // await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+        // console.log("已删除旧头像缓存:", LOCAL_AVATAR_PATH);
         
         // 下载云端最新头像到本地缓存
+        console.log("开始下载新头像，URL:", `${avatarUrl}?t=${timestamp}`);
         const { uri } = await FileSystem.downloadAsync(
-          `${avatarUrl}?t=${timestamp}`, // 添加时间戳避免缓存问题
+          `${avatarUrl}?t=${timestamp}`, // 使用毫秒级时间戳作为URL参数
           LOCAL_AVATAR_PATH,
           {
             md5: true,
@@ -293,11 +309,20 @@ export default function Mine() {
           }
         );
         
-        // 更新头像URI
-        setAvatarUri(uri);
+        // 验证下载成功并更新UI
+        const newFileInfo = await FileSystem.getInfoAsync(uri);
+        console.log("新下载的头像信息:", newFileInfo);
+      //   if (newFileInfo.exists && newFileInfo.size > 0) {
+      //     // 确保使用新的URI更新头像
+      //     console.log("头像下载成功，更新头像URI:", uri);
+      //     setAvatarUri(uri);
+      //   } else {
+      //     console.error("头像下载成功但文件验证失败");
+      //   }
         
-        Alert.alert('成功', '头像已更新');
-      } else {
+      //   Alert.alert('成功', '头像已更新');
+      } 
+      else {
         throw new Error(response.data.msg || '上传失败');
       }
     } catch (error) {

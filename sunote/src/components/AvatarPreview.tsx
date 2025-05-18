@@ -70,7 +70,7 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
       Alert.alert("保存成功", "头像已保存到相册");
     } catch (error) {
       console.error("保存头像失败:", error);
-      Alert.alert("保存失败", "保存头像时发生错误");
+      // Alert.alert("保存失败", "保存头像时发生错误");
     }
   };
 
@@ -110,7 +110,7 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
       }
     } catch (error) {
       console.error("选择头像失败:", error);
-      Alert.alert("选择失败", "选择头像时发生错误");
+      // Alert.alert("选择失败", "选择头像时发生错误");
     }
   };
 

@@ -15,7 +15,7 @@ export interface User {
     bio?: string;
     address?: string;
     birthday?: string;     // 用 string 存储日期，格式如 'YYYY-MM-DD'
-    avatarUpdatedAt?: number; // 头像更新时间戳
+    avatarUpdatedAt?: number | string; // 头像更新时间戳，可以是数字或ISO日期字符串
 }
 
 // 检查用户表是否存在
@@ -41,7 +41,7 @@ export function initDatabase() {
     } else {
       console.log("用户表已存在");
       // 检查并添加新列
-      updateUserTable();
+      // updateUserTable();
     }
   } catch (error) {
     console.error("初始化数据库时出错:", error);
@@ -61,7 +61,7 @@ export function updateUserTable() {
     
     if (!hasColumn) {
       // 如果列不存在，添加该列
-      db.execSync(`ALTER TABLE user ADD COLUMN avatar_updated_at INTEGER`);
+      db.execSync(`ALTER TABLE user ADD COLUMN avatar_updated_at TEXT`);
       console.log('用户表已更新：添加了avatar_updated_at列');
     }
   } catch (error) {
@@ -83,7 +83,7 @@ export function createUserTable() {
         bio TEXT,
         address TEXT,
         birthday TEXT,
-        avatar_updated_at INTEGER
+        avatar_updated_at TEXT
       );
     `);
     console.log('用户表已创建');
@@ -95,6 +95,18 @@ export function createUserTable() {
 // 保存用户信息（同步）
 export function saveUser(user: User) {
   try {
+    // 处理时间戳，确保以正确的格式存储
+    let avatarUpdatedAtValue = 'NULL';
+    if (user.avatarUpdatedAt !== undefined) {
+      if (typeof user.avatarUpdatedAt === 'number') {
+        // 如果是数字时间戳，转换为ISO字符串
+        avatarUpdatedAtValue = `'${new Date(user.avatarUpdatedAt).toISOString()}'`;
+      } else {
+        // 如果已经是字符串，直接使用
+        avatarUpdatedAtValue = `'${user.avatarUpdatedAt}'`;
+      }
+    }
+
     db.execSync(
       `INSERT OR REPLACE INTO user (id, username, password, email, phone, avatar, bio, address, birthday, avatar_updated_at) VALUES (
         ${user.id ?? 'NULL'},
@@ -106,7 +118,7 @@ export function saveUser(user: User) {
         '${user.bio ?? ''}',
         '${user.address ?? ''}',
         '${user.birthday ?? ''}',
-        ${user.avatarUpdatedAt ?? 'NULL'}
+        ${avatarUpdatedAtValue}
       )`
     );
   } catch (error) {
@@ -123,6 +135,8 @@ export function getUser() {
       const user = result as any;
       // 将avatar_updated_at映射到avatarUpdatedAt
       if (user.avatar_updated_at !== undefined) {
+        // 如果是ISO日期字符串，保持原样
+        // 如果需要，可以在这里将字符串转回时间戳：new Date(user.avatar_updated_at).getTime()
         user.avatarUpdatedAt = user.avatar_updated_at;
       }
       return user as User;
