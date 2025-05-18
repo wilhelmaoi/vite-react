@@ -15,23 +15,33 @@ import AvatarPreview from "../../../src/components/AvatarPreview";
 import { getUser, User, saveUser } from "../../../src/database/sqlite";
 
 
-const LOCAL_AVATAR_PATH = FileSystem.cacheDirectory + "avatar.jpg";
+
+// const LOCAL_AVATAR_PATH = FileSystem.cacheDirectory + user?.username + "avatar.jpg";
 
 export default function Mine() {
-  const authStore = useAuthStore.getState();
-  const user = authStore.user;
+
+  const { user, avatarUri, setAvatarUri, logout,setUser } = useAuthStore();
   const router = useRouter();
   const theme = useTheme();
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+  const LOCAL_AVATAR_PATH = (FileSystem.cacheDirectory ?? '') + user?.username + "/avatar.jpg";
+
 
   const handleLogout = () => {
-    authStore.logout();
+    logout();
     router.replace("/sign-in"); // 使用 replace 防止用户回退
   };
 
   // 检查并请求文件系统权限
   const checkAndRequestPermissions = async () => {
     try {
+      // 创建用户头像目录
+      const userAvatarDir = (FileSystem.cacheDirectory ?? '') + user?.username;
+      const dirInfo = await FileSystem.getInfoAsync(userAvatarDir);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(userAvatarDir, { intermediates: true });
+      }
+      
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -53,7 +63,6 @@ export default function Mine() {
     }
   };
 
-  useEffect(() => {
     // 头像管理逻辑
     const manageAvatar = async () => {
       try {
@@ -71,19 +80,101 @@ export default function Mine() {
           return;
         }
 
+        // 检查本地缓存
+        const localFileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
+
+        // 获取最新用户信息，检查头像是否需要更新
+        if (user?.id) {
+          try {
+            // 调用API获取最新的用户信息
+            const response = await request.post('/user/info', {
+              username: user.username,
+              password: user.password
+            });
+            
+            if (response.data.code === 200) {
+              console.log("获取到服务器用户信息:", response.data.data);
+              const serverUser = response.data.data;
+              const serverAvatarUrl = serverUser.avatar;
+              // 获取后端返回的时间戳，Java类avatarUpdatedAt对应的JSON字段可能是avatarUpdatedAt
+              let serverTimestamp = 0;
+              if (serverUser.avatarUpdatedAt) {
+                serverTimestamp = serverUser.avatarUpdatedAt;
+                console.log("服务器端头像更新时间戳:", serverTimestamp);
+              }
+              
+              // 获取本地存储的时间戳
+              let localTimestamp = 0;
+              if (user.avatarUpdatedAt) {
+                localTimestamp = user.avatarUpdatedAt;
+                console.log("本地头像更新时间戳:", localTimestamp);
+              }
+              
+              // 如果服务器头像更新时间比本地新，或者本地无头像但服务器有
+              if ((serverTimestamp > localTimestamp) || (!user.avatar && serverAvatarUrl)) {
+                console.log("检测到头像更新，从服务器同步最新头像");
+                
+                // 清除旧头像
+                await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+                
+                // 下载新头像
+                if (serverAvatarUrl) {
+                  // 构建带有防缓存参数的URL
+                  const avatarUrlWithCache = `${serverAvatarUrl}?t=${serverTimestamp}`;
+                  
+                  const { uri } = await FileSystem.downloadAsync(
+                    avatarUrlWithCache,
+                    LOCAL_AVATAR_PATH,
+                    {
+                      md5: true,
+                      cache: true
+                    }
+                  );
+                  
+                  // 验证下载的文件
+                  const downloadedFileInfo = await FileSystem.getInfoAsync(uri);
+                  
+                  if (downloadedFileInfo.exists && downloadedFileInfo.size > 0) {
+                    // 更新内存中的头像和用户信息
+                    setAvatarUri(uri);
+                    
+                    // 更新本地数据库中的用户信息
+                    const updatedUser = {
+                      ...user,
+                      avatar: serverAvatarUrl,
+                      avatarUpdatedAt: serverTimestamp
+                    };
+                    saveUser(updatedUser);
+                    setUser(updatedUser);
+                    
+                    return;
+                  }
+                }
+              } else if (localFileInfo.exists) {
+                // 本地缓存是最新的，直接使用
+                console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
+                setAvatarUri(LOCAL_AVATAR_PATH);
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("获取最新用户信息失败:", error);
+          }
+        }
+
+        // 如果以上逻辑未返回，说明需要使用本地缓存或处理旧逻辑
+        // 下面是原有逻辑，作为备用方案
+
         // 1. 先检查本地缓存是否存在
-        const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
-        console.log('缓存文件信息:', fileInfo);
-        
-        if (fileInfo.exists) {
+        if (localFileInfo.exists) {
           try {
             // 验证文件是否可读
             const fileContent = await FileSystem.readAsStringAsync(LOCAL_AVATAR_PATH, {
               encoding: FileSystem.EncodingType.Base64,
             });
             if (fileContent) {
-              console.log("使用本地缓存头像，文件大小:", fileInfo.size);
-              authStore.setAvatarUri(LOCAL_AVATAR_PATH);
+              console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
+              setAvatarUri(LOCAL_AVATAR_PATH);  // 使用 hook 获取的函数
               return;
             }
           } catch (readError) {
@@ -112,7 +203,7 @@ export default function Mine() {
             console.log('下载的文件信息:', downloadedFileInfo);
             
             if (downloadedFileInfo.exists && downloadedFileInfo.size > 0) {
-              authStore.setAvatarUri(uri);
+              setAvatarUri(uri);
               return;
             }
           } catch (error) {
@@ -127,8 +218,12 @@ export default function Mine() {
       }
     };
     
+
+
+  useEffect(() => {
+
     manageAvatar();
-  }, [user?.avatar]); // 当 user.avatar 变化时重新获取
+  },  [user?.avatar, avatarUri, user?.username]);  // 添加 user?.username 作为依赖
 
   // 处理头像变更
   const handleAvatarChange = async (newAvatarUri: string) => {
@@ -146,7 +241,7 @@ export default function Mine() {
         to: newPath
       });
 
-      authStore.setAvatarUri(newPath);
+      setAvatarUri(newPath);
       
       // 准备上传到服务器
       const formData = new FormData();
@@ -156,23 +251,51 @@ export default function Mine() {
         type: 'image/jpeg'
       } as any);
       
+      // 获取当前token
+      const token = useAuthStore.getState().token;
+      
       // 上传头像到服务器
       const response = await request.post('/user/avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'token': token, // 直接添加token到请求头
         },
       });
       
       if (response.data.code === 200) {
+        console.log("上传头像响应:", response.data);
+        // 从响应中获取云端URL和时间戳
+        const responseData = response.data.data;
+        const avatarUrl = responseData.avatarUrl || responseData;
+        const timestamp = responseData.timestamp || Date.now();
+        
         // 更新本地用户信息
         if (user) {
           const updatedUser: User = {
             ...user,
-            avatar: newPath
+            avatar: avatarUrl,
+            avatarUpdatedAt: timestamp
           };
           saveUser(updatedUser);
-          authStore.setUser(updatedUser);
+          setUser(updatedUser);
         }
+        
+        // 删除旧的本地缓存，强制重新下载
+        await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+        
+        // 下载云端最新头像到本地缓存
+        const { uri } = await FileSystem.downloadAsync(
+          `${avatarUrl}?t=${timestamp}`, // 添加时间戳避免缓存问题
+          LOCAL_AVATAR_PATH,
+          {
+            md5: true,
+            cache: true
+          }
+        );
+        
+        // 更新头像URI
+        setAvatarUri(uri);
+        
         Alert.alert('成功', '头像已更新');
       } else {
         throw new Error(response.data.msg || '上传失败');
@@ -196,16 +319,16 @@ export default function Mine() {
         >
           <Avatar.Image
             size={80}
-            source={
-              authStore.avatarUri
-              ? { uri: authStore.avatarUri }
+            source={ 
+             avatarUri        
+              ? { uri: avatarUri }
               : require("../../../src/assets/avatar.jpg")
             }
           />
           <Avatar.Text
             size={24}
             label="在线"
-            style={styles.statusIndicator}
+            style={[styles.statusIndicator, { borderColor: theme.colors.background }]}
             color="#fff"/>
         </TouchableOpacity>
         <Text style={styles.username}>{user?.nickname ?? "未登录"}</Text>
@@ -243,7 +366,7 @@ export default function Mine() {
         {/* 头像预览模态框 */}
         <AvatarPreview
           visible={showAvatarPreview}
-          imageUri={authStore.avatarUri}
+          imageUri={avatarUri}
           defaultImage={require("../../../src/assets/avatar.jpg")}
           onClose={() => setShowAvatarPreview(false)}
           onAvatarChange={handleAvatarChange}
@@ -275,10 +398,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#43b581",
     position: "absolute",
-    bottom: 10,
-    right: 15,
-    borderWidth: 3,
-    borderColor: "#18191c",
+    bottom: 5,
+    right: 5,
+    borderWidth: 2,
+    
   },
   button: {
     marginTop: 10,

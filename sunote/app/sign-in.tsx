@@ -30,7 +30,7 @@ import Animated, {
 } from "react-native-reanimated";
 import RegisterForm from "./register";
 import { saveUser, User } from "../src/database/sqlite";
-
+import * as FileSystem from "expo-file-system";
 
 
 
@@ -60,10 +60,18 @@ async function onLoginSuccess(
     saveUser(user); // 存入sqlite
     authStore.setUser(user); // 存入 store
   }
+  const LOCAL_AVATAR_PATH = (FileSystem.cacheDirectory ?? '') + user?.username + "/avatar.jpg";
+
+  const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
+  if (fileInfo.exists) {
+    await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+  }
 
 }
 
 export default function SignIn() {
+
+  
   const router = useRouter();
   const theme = useTheme();
 

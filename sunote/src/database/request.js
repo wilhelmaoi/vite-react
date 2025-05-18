@@ -18,9 +18,15 @@ request.interceptors.request.use(
       const token = useAuthStore.getState().token;
   
       if (config.url !== '/login') {
-        if (token && config.headers?.set) {
-            config.headers.set('Authorization', `Bearer ${token}`);
-          }
+        if (token && config.headers) {
+            // 统一使用token作为请求头名称，确保与后端匹配
+            config.headers['token'] = token;
+            
+            // 保留Authorization Bearer方式以支持其他后端格式
+            if (config.headers['Authorization'] === undefined) {
+              config.headers['Authorization'] = `Bearer ${token}`;
+            }
+        }
       }
   
       return config;
