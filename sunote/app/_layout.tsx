@@ -48,10 +48,7 @@ function AppContent() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar
-        style={mode === "dark" ? "light" : "dark"}
-        translucent={true}
-      />
+
       
       <Drawer.Navigator
         drawerContent={(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />}
@@ -110,9 +107,14 @@ export default function RootLayout() {
   return (
     <NavigationContainer theme={mode === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1,backgroundColor:theme.colors.background  }} edges={['bottom']}>
+      <StatusBar
+        style={mode === "dark" ? "light" : "dark"}
+        translucent={true}
+      />
       <ThemeProvider>
         <AppContent />
       </ThemeProvider>
+
       </SafeAreaView>
     </NavigationContainer>
   );

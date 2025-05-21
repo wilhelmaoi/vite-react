@@ -1,11 +1,11 @@
-// components/screens/hot.tsx
-import React, { useState, useEffect, useCallback } from "react";
-import { StyleSheet, View, FlatList, RefreshControl, Image, TouchableOpacity } from "react-native";
-import { Surface, Text, Card, Avatar, Chip, Divider, IconButton } from "react-native-paper";
-import { useRouter } from "expo-router";
-import request from "../../../src/database/request";
-import { useTheme } from "../../../src/theme/ThemeContext";
-import { useAuthStore } from "../../../src/context/store";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { StyleSheet, View, FlatList, RefreshControl, Image, TouchableOpacity } from 'react-native';
+import { Surface, Text, Card, Avatar, Chip, Divider, IconButton, Appbar } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import request from '../../../src/database/request';
+import { useTheme } from '../../../src/theme/ThemeContext';
+import { useAuthStore } from '../../../src/context/store';
+import * as FileSystem from 'expo-file-system';
 
 // 帖子数据类型
 interface PostItem {
@@ -21,18 +21,30 @@ interface PostItem {
   mood?: string;
 }
 
-export default function Hot() {
+export default function MyPosts() {
   const theme = useTheme();
   const router = useRouter();
-  const { username } = useAuthStore();
+  const { username, user, avatarUri } = useAuthStore();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  
+  // 获取本地缓存的头像路径
+  const LOCAL_AVATAR_PATH = useMemo(() => {
+    return (FileSystem.cacheDirectory ?? '') + user?.username + "/avatar.jpg";
+  }, [user?.username]);
 
-  // 加载帖子数据
+  // 加载用户帖子数据
   const loadPosts = useCallback(async (pageNum = 1, refresh = false) => {
+    if (!username) {
+      console.error('用户未登录');
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       if (refresh) {
         setRefreshing(true);
@@ -43,7 +55,7 @@ export default function Hot() {
 
       const response = await request({
         method: 'GET',
-        url: `/post/hot?page=${pageNum}&size=10`,
+        url: `/post/user/${username}?page=${pageNum}&size=10`,
       });
 
       if (response.data.code === 200) {
@@ -56,15 +68,15 @@ export default function Hot() {
         setHasMore(newPosts.length === 10);
         setPage(pageNum);
       } else {
-        console.error('获取热门帖子失败:', response.data.msg);
+        console.error('获取用户帖子失败:', response.data.msg);
       }
     } catch (error) {
-      console.error('加载热门帖子数据出错:', error);
+      console.error('加载用户帖子数据出错:', error);
     } finally {
       setRefreshing(false);
       setLoading(false);
     }
-  }, []);
+  }, [username]);
 
   // 首次加载
   useEffect(() => {
@@ -82,29 +94,6 @@ export default function Hot() {
       loadPosts(page + 1);
     }
   }, [refreshing, loading, hasMore, page, loadPosts]);
-
-  // 点赞功能
-  const handleLike = async (id: number) => {
-    try {
-      const response = await request({
-        method: 'POST',
-        url: `/post/${id}/like`,
-      });
-
-      if (response.data.code === 200) {
-        // 更新本地点赞数
-        setPosts(
-          posts.map(post => 
-            post.id === id 
-              ? { ...post, likeCount: post.likeCount + 1 } 
-              : post
-          )
-        );
-      }
-    } catch (error) {
-      console.error('点赞失败:', error);
-    }
-  };
 
   // 渲染帖子项
   const renderPostItem = ({ item }: { item: PostItem }) => {
@@ -133,17 +122,30 @@ export default function Hot() {
     };
 
     const tags = extractTags(item.content);
+    
+    // 使用本地缓存的头像（只针对当前用户的帖子）
+    const useLocalAvatar = item.username === username;
+    const avatarSource = useLocalAvatar && avatarUri 
+      ? { uri: avatarUri }
+      : undefined;
 
     return (
       <Card style={[styles.postCard, { backgroundColor: theme.colors.surface }]} mode="outlined">
         <Card.Content>
           {/* 用户信息区 */}
           <View style={styles.userInfoContainer}>
-            <Avatar.Text 
-              size={40} 
-              label={item.username.substring(0, 2).toUpperCase()} 
-              style={{ backgroundColor: theme.colors.primary }}
-            />
+            {avatarSource ? (
+              <Avatar.Image 
+                size={40}
+                source={avatarSource}
+              />
+            ) : (
+              <Avatar.Text 
+                size={40} 
+                label={item.username.substring(0, 2).toUpperCase()} 
+                style={{ backgroundColor: theme.colors.primary }}
+              />
+            )}
             <View style={styles.userTextContainer}>
               <Text style={[styles.username, { color: theme.colors.primary }]}>{item.username}</Text>
               <Text style={styles.postTime}>{formatDate(item.createdAt)}</Text>
@@ -211,17 +213,14 @@ export default function Hot() {
 
           {/* 互动区 */}
           <View style={styles.interactionContainer}>
-            <TouchableOpacity 
-              style={styles.interactionItem}
-              onPress={() => handleLike(item.id)}
-            >
+            <View style={styles.interactionItem}>
               <IconButton icon="heart-outline" size={20} />
               <Text>{item.likeCount}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.interactionItem}>
+            </View>
+            <View style={styles.interactionItem}>
               <IconButton icon="comment-outline" size={20} />
               <Text>{item.commentCount}</Text>
-            </TouchableOpacity>
+            </View>
             <View style={styles.interactionItem}>
               <IconButton icon="eye-outline" size={20} />
               <Text>{item.viewCount}</Text>
@@ -258,10 +257,10 @@ export default function Hot() {
     
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>还没有任何热门帖子</Text>
+        <Text style={styles.emptyText}>您还没有发布任何帖子</Text>
         <TouchableOpacity onPress={() => router.push('/(tabs)/Post')}>
           <Text style={[styles.createPostText, { color: theme.colors.primary }]}>
-            发布帖子，成为热门博主
+            立即发布第一个帖子
           </Text>
         </TouchableOpacity>
       </View>
@@ -270,6 +269,11 @@ export default function Hot() {
 
   return (
     <Surface style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Appbar.Header>
+        <Appbar.BackAction onPress={() => router.back()} />
+        <Appbar.Content title="我的发帖" />
+      </Appbar.Header>
+      
       <FlatList
         data={posts}
         renderItem={renderPostItem}
@@ -395,4 +399,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
+}); 

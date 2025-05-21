@@ -261,9 +261,8 @@ export default function SignIn() {
           backgroundColor: theme.colors.background,
         }}
         style={styles.BottomSheet}
-        // onClose={() => {console.log('sheet closed!');setVisible(false)}}
       >
-        <RegisterForm onSubmit={handleClosePress} isFull ={isSheetFull}/>
+        <RegisterForm onSubmit={handleClosePress} isFull={isSheetFull}/>
       </BottomSheet>
     </Surface>
   );
@@ -305,7 +304,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-
     elevation: 5,
   },
 });

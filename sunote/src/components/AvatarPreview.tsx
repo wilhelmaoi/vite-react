@@ -95,8 +95,8 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const selectedAsset = result.assets[0];
-        // 复制到应用缓存目录
-        const newAvatarUri = FileSystem.cacheDirectory + "new_avatar.jpg";
+        // 复制到应用缓存目录，添加时间戳确保每次生成唯一文件名
+        const newAvatarUri = FileSystem.cacheDirectory + "new_avatar_" + Date.now() + ".jpg";
         await FileSystem.copyAsync({
           from: selectedAsset.uri,
           to: newAvatarUri,

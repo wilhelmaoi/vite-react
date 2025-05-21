@@ -16,12 +16,13 @@ export default function RegisterForm({
   isFull?: boolean;
 }) {
   const theme = useTheme();
-  const { username, password, setUsername, setPassword } = useAuthStore();
+  const { username, password, setUsername, setPassword, nikename, setNikename, setUser } = useAuthStore();
   // const sheetRef = useRef<BottomSheet>(null);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [countdown, setCountdown] = useState(60); // 倒计时
+  const [countdown, setCountdown] = useState(0); // 初始值改为0
+  const [isSending, setIsSending] = useState(false); // 添加发送状态
 
   // 处理表单的展开和收起的css样式
   let formStyle = isFull ? styles.container_expand : styles.container_contract;
@@ -32,9 +33,12 @@ export default function RegisterForm({
       alert("请输入有效邮箱！");
       return;
     }
+
+    if (isSending) return; // 如果正在发送，直接返回
+
     try {
-      // ✨假设你有对应的后端API /api/sendCode
-      await request.post("/api/sendCode", { email });
+      setIsSending(true);
+      await request.post("/email/sendCode", { email });
       alert("验证码已发送，请检查邮箱");
 
       setCountdown(60);
@@ -42,12 +46,14 @@ export default function RegisterForm({
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
+            setIsSending(false);
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
     } catch (e) {
+      setIsSending(false);
       alert("发送失败，请稍后重试");
     }
   };
@@ -58,13 +64,34 @@ export default function RegisterForm({
       alert("请完整填写信息");
       return;
     }
-    // 模拟注册请求，你应替换为真实API
+
+    // 验证码校验
     try {
-      await request.post("/register", { username, password, email, code });
-      alert("注册成功！");
-      onSubmit?.();
-    } catch (e) {
-      alert("注册失败：" + (e?.message || "未知错误"));
+      const verifyResponse = await request.post("/email/verifyCode", { email, code });
+      if (verifyResponse.data !== "验证成功") {
+        alert("验证码错误或已过期");
+        return;
+      }
+
+      // 注册请求
+      const registerResponse = await request.post("/register", {
+        username,
+        password,
+        email,
+        nickname: nikename || username // 如果没有设置昵称，使用用户名作为昵称
+      });
+
+      if (registerResponse.data.code === 200) {
+        // 注册成功，保存用户信息
+        const userData = registerResponse.data.data;
+        setUser(userData);
+        alert("注册成功！");
+        onSubmit?.();
+      } else {
+        alert(registerResponse.data.msg || "注册失败");
+      }
+    } catch (e: any) {
+      alert("注册失败：" + (e?.response?.data?.msg || e?.message || "未知错误"));
     }
   };
 
@@ -114,6 +141,14 @@ export default function RegisterForm({
           style={styles.input}
           left={<TextInput.Icon icon="lock" />}
         />
+         <TextInput
+          label="昵称"
+          value={nikename}
+          onChangeText={setNikename}
+          style={styles.input}
+          mode="outlined"
+          left={<TextInput.Icon icon="account-circle" />}
+        />
         <TextInput
           label="验证码"
           value={code}
@@ -124,19 +159,16 @@ export default function RegisterForm({
           right={
             <TextInput.Icon
               icon="send"
-              onPress={countdown ? undefined : handleSendCode}
-              disabled={countdown > 0 || !email}
+              onPress={handleSendCode}
+              disabled={isSending || countdown > 0 || !email}
               color={theme.colors.primary}
-              // style={{
-              //   opacity: countdown > 0 ? 0.5 : 1, }}// 禁用状态
             />
           }
           placeholder="输入邮箱收到的验证码"
         />
         {countdown > 0 && (
           <Text style={{ marginLeft: 18, color: theme.colors.secondary }}>
-            {" "}
-            {countdown}s后可重新获取{" "}
+            {countdown}秒后可重新获取
           </Text>
         )}
         <Button

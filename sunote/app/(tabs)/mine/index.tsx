@@ -84,7 +84,7 @@ export default function Mine() {
         const localFileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
 
         // 获取最新用户信息，检查头像是否需要更新
-        if (user?.id) {
+        if (user?.username) {
           try {
             // 调用API获取最新的用户信息
             const response = await request.post('/user/info', {
@@ -160,13 +160,7 @@ export default function Mine() {
                   }
                 }
               }
-              // } else if (localFileInfo.exists) {
-              //   // 本地缓存是最新的，直接使用
-              //   console.log("使用本地缓存头像，文件大小:", localFileInfo.size);
-              //   console.log("本地缓存头像详细信息:", localFileInfo);
-              //   setAvatarUri(LOCAL_AVATAR_PATH);
-              //   return;
-              // }
+            
             }
           } catch (error) {
             console.error("获取最新用户信息失败:", error);
@@ -231,10 +225,13 @@ export default function Mine() {
     
 
 
+
+
+    
   useEffect(() => {
 
     manageAvatar();
-  },  [ user?.avatar]);  // 添加 user?.username 作为依赖
+  },  []);  // 添加 user?.username 作为依赖
 
   // 处理头像变更
   const handleAvatarChange = async (newAvatarUri: string) => {
@@ -293,10 +290,12 @@ export default function Mine() {
           saveUser(updatedUser);
           setUser(updatedUser);
         }
+
+   
         
-        // 删除旧的本地缓存，强制重新下载
-        // await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
-        // console.log("已删除旧头像缓存:", LOCAL_AVATAR_PATH);
+        //删除旧的本地缓存，强制重新下载
+        await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+        console.log("已删除旧头像缓存:", LOCAL_AVATAR_PATH);
         
         // 下载云端最新头像到本地缓存
         console.log("开始下载新头像，URL:", `${avatarUrl}?t=${timestamp}`);
@@ -312,13 +311,13 @@ export default function Mine() {
         // 验证下载成功并更新UI
         const newFileInfo = await FileSystem.getInfoAsync(uri);
         console.log("新下载的头像信息:", newFileInfo);
-      //   if (newFileInfo.exists && newFileInfo.size > 0) {
-      //     // 确保使用新的URI更新头像
-      //     console.log("头像下载成功，更新头像URI:", uri);
-      //     setAvatarUri(uri);
-      //   } else {
-      //     console.error("头像下载成功但文件验证失败");
-      //   }
+        if (newFileInfo.exists && newFileInfo.size > 0) {
+          // 确保使用新的URI更新头像
+          console.log("头像下载成功，更新头像URI:", uri);
+          setAvatarUri(uri);
+        } else {
+          console.error("头像下载成功但文件验证失败");
+        }
         
       //   Alert.alert('成功', '头像已更新');
       } 
@@ -330,6 +329,10 @@ export default function Mine() {
       Alert.alert('更新失败', '头像更新失败，请稍后再试');
     }
   };
+
+
+  useEffect(() => {
+  },  [handleAvatarChange ]);  
 
   return (
     <Surface style={{ flex: 1 }}>
@@ -353,7 +356,7 @@ export default function Mine() {
           <Avatar.Text
             size={24}
             label="在线"
-            style={[styles.statusIndicator, { borderColor: theme.colors.background }]}
+            style={[styles.statusIndicator, { borderColor: theme.colors.background,backgroundColor: avatarUri? "#43b581" : "#DA4F4FFF", }]}
             color="#fff"/>
         </TouchableOpacity>
         <Text style={styles.username}>{user?.nickname ?? "未登录"}</Text>
@@ -375,10 +378,10 @@ export default function Mine() {
             left={() => <List.Icon icon="account-group" />}
           />
           <List.Item
-            title="备注"
-            description="添加备注信息"
+            title="我的发帖"
+            description="点击查看我的发帖"
+            onPress={() => router.push('/(tabs)/mine/my-posts')}
             left={() => <List.Icon icon="note-outline" />}
-            right={() => <List.Icon icon="plus-circle-outline" />}
           />
           <List.Item
             title="退出登录"
@@ -421,7 +424,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: "#43b581",
+
     position: "absolute",
     bottom: 5,
     right: 5,
@@ -437,3 +440,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 });
+
