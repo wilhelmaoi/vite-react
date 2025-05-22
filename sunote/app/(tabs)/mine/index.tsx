@@ -228,10 +228,7 @@ export default function Mine() {
 
 
     
-  useEffect(() => {
 
-    manageAvatar();
-  },  []);  // 添加 user?.username 作为依赖
 
   // 处理头像变更
   const handleAvatarChange = async (newAvatarUri: string) => {
@@ -330,9 +327,11 @@ export default function Mine() {
     }
   };
 
-
   useEffect(() => {
-  },  [handleAvatarChange ]);  
+
+    manageAvatar();
+  },  [handleAvatarChange,avatarUri]);  // 添加 user?.username 作为依赖
+
 
   return (
     <Surface style={{ flex: 1 }}>
@@ -380,7 +379,7 @@ export default function Mine() {
           <List.Item
             title="我的发帖"
             description="点击查看我的发帖"
-            onPress={() => router.push('/(tabs)/mine/my-posts')}
+            onPress={() => router.push('/(screen)/my-posts')}
             left={() => <List.Icon icon="note-outline" />}
           />
           <List.Item

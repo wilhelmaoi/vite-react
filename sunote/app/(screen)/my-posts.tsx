@@ -2,29 +2,18 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { StyleSheet, View, FlatList, RefreshControl, Image, TouchableOpacity } from 'react-native';
 import { Surface, Text, Card, Avatar, Chip, Divider, IconButton, Appbar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
-import request from '../../../src/database/request';
-import { useTheme } from '../../../src/theme/ThemeContext';
-import { useAuthStore } from '../../../src/context/store';
+import request from '../../src/database/request';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { useAuthStore } from '../../src/context/store';
 import * as FileSystem from 'expo-file-system';
-
+import { PostItem } from '../../src/context/store';
 // 帖子数据类型
-interface PostItem {
-  id: number;
-  username: string;
-  content: string;
-  imageUrls: string[];
-  likeCount: number;
-  commentCount: number;
-  viewCount: number;
-  createdAt: string;
-  location?: string;
-  mood?: string;
-}
+
 
 export default function MyPosts() {
   const theme = useTheme();
   const router = useRouter();
-  const { username, user, avatarUri } = useAuthStore();
+  const { username, user, avatarUri, nickname } = useAuthStore();
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -60,6 +49,7 @@ export default function MyPosts() {
 
       if (response.data.code === 200) {
         const newPosts = response.data.data;
+        // console.log(newPosts);
         if (refresh || pageNum === 1) {
           setPosts(newPosts);
         } else {
@@ -129,8 +119,19 @@ export default function MyPosts() {
       ? { uri: avatarUri }
       : undefined;
 
+
+
+
+    const handlePostPress = () => {
+      console.log(item.id);
+      router.push(`/(screen)/post-detail?id=${item.id}`);
+    };
     return (
-      <Card style={[styles.postCard, { backgroundColor: theme.colors.surface }]} mode="outlined">
+      <Card 
+        style={[styles.postCard, { backgroundColor: theme.colors.onSecondary }]} 
+        mode="elevated"
+        onPress={handlePostPress}
+      >
         <Card.Content>
           {/* 用户信息区 */}
           <View style={styles.userInfoContainer}>
@@ -147,7 +148,7 @@ export default function MyPosts() {
               />
             )}
             <View style={styles.userTextContainer}>
-              <Text style={[styles.username, { color: theme.colors.primary }]}>{item.username}</Text>
+              <Text style={[styles.username, { color: theme.colors.primary }]}>{item.nickname}</Text>
               <Text style={styles.postTime}>{formatDate(item.createdAt)}</Text>
             </View>
           </View>
@@ -173,7 +174,7 @@ export default function MyPosts() {
           )}
 
           {/* 图片区 */}
-          {item.imageUrls && item.imageUrls.length > 0 && (
+          {/* {item.imageUrls && item.imageUrls.length > 0 && (
             <View style={styles.imagesContainer}>
               {item.imageUrls.slice(0, 3).map((url, index) => (
                 <Image 
@@ -189,10 +190,10 @@ export default function MyPosts() {
                 </View>
               )}
             </View>
-          )}
+          )} */}
 
           {/* 位置和心情 */}
-          <View style={styles.metaInfoContainer}>
+          {/* <View style={styles.metaInfoContainer}>
             {item.location && (
               <Chip 
                 icon="map-marker"
@@ -209,7 +210,7 @@ export default function MyPosts() {
                 {item.mood}
               </Chip>
             )}
-          </View>
+          </View> */}
 
           {/* 互动区 */}
           <View style={styles.interactionContainer}>

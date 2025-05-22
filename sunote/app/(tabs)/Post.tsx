@@ -18,6 +18,7 @@ export default function Post() {
   const theme = useTheme();
   const [content, setContent] = useState('');
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const { username, user } = useAuthStore();
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAllImages, setShowAllImages] = useState(false);
@@ -35,7 +36,6 @@ export default function Post() {
   
   // 文本输入光标位置
   const [selectionStart, setSelectionStart] = useState(0);
-  const { username } = useAuthStore();
   const router = useRouter();
   
   // 获取格式化内容的函数
@@ -389,6 +389,7 @@ export default function Post() {
       const postData = {
         content: content,
         username: username,
+        nickname: user?.nickname || username,
         tempImagePaths: tempImagePaths,
         location: locationName || undefined,
         mood: mood || undefined,

@@ -16,7 +16,7 @@ export default function RegisterForm({
   isFull?: boolean;
 }) {
   const theme = useTheme();
-  const { username, password, setUsername, setPassword, nikename, setNikename, setUser } = useAuthStore();
+  const { username, password, setUsername, setPassword, nickname, setNickname, setUser } = useAuthStore();
   // const sheetRef = useRef<BottomSheet>(null);
 
   const [email, setEmail] = useState("");
@@ -78,7 +78,7 @@ export default function RegisterForm({
         username,
         password,
         email,
-        nickname: nikename || username // 如果没有设置昵称，使用用户名作为昵称
+        nickname: nickname || username // 如果没有设置昵称，使用用户名作为昵称
       });
 
       if (registerResponse.data.code === 200) {
@@ -143,8 +143,8 @@ export default function RegisterForm({
         />
          <TextInput
           label="昵称"
-          value={nikename}
-          onChangeText={setNikename}
+          value={nickname}
+          onChangeText={setNickname}
           style={styles.input}
           mode="outlined"
           left={<TextInput.Icon icon="account-circle" />}
