@@ -81,15 +81,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 
 
-
-
-
-
-
-
-
-
-
 export const useTheme = (paramMode?: ThemeMode) => {
   // 自动优先用传参，没有再用store的
   const mode = paramMode ?? useThemeStore((state) => state.mode);

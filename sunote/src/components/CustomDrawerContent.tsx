@@ -1,14 +1,14 @@
 import React from "react";
 import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { DrawerContentScrollView } from "@react-navigation/drawer";
-import { Avatar, Card, Text } from "react-native-paper";
+import { Avatar, Card, Text, IconButton } from "react-native-paper";
 import { useTheme } from "../theme/ThemeContext";
 import { AntDesign } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { useAuthStore } from "../context/store";
+import { useAuthStore, useThemeStore } from "../context/store";
 
 export default function CustomDrawerContent(
   props: DrawerContentComponentProps
@@ -17,6 +17,7 @@ export default function CustomDrawerContent(
   const navigation = useNavigation();
   const router = useRouter();
   const { user, avatarUri } = useAuthStore();
+  const { mode, toggleTheme } = useThemeStore();
 
   const [fontsLoaded] = useFonts({
     "mini-jian-huangcao": require("../assets/fonts/迷你简黄草.ttf"),
@@ -30,12 +31,36 @@ export default function CustomDrawerContent(
     // 导航到指定路径
     router.push(path);
   };
+
+  // 处理扫描二维码
+  const handleScanQRCode = () => {
+    navigation.dispatch(DrawerActions.closeDrawer());
+    router.push("/scan-qr-code");
+  };
+
   return (
     <DrawerContentScrollView {...props}>
+       {/* 右上角按钮区域 */}
+       <View style={styles.headerButtons}>
+          <IconButton
+            icon="qrcode-scan"
+            iconColor={theme.colors.primary}
+            size={24}
+            onPress={handleScanQRCode}
+          />
+          <IconButton
+            icon={mode === 'light' ? 'weather-night' : 'white-balance-sunny'}
+            iconColor={theme.colors.primary}
+            size={24}
+            onPress={toggleTheme}
+          />
+        </View>
+
       {/* 用户信息区域 */}
       <Card
         style={[styles.userSection, { backgroundColor: theme.colors.primary }]}
       >
+       
         <TouchableOpacity
           style={styles.userInfo}
           onPress={() => navigateAndCloseDrawer("/mine")}
@@ -52,7 +77,7 @@ export default function CustomDrawerContent(
               {user?.nickname || "未登录"}
             </Text>
             <Text style={[styles.userEmail, { color: theme.colors.onPrimary }]}>
-              {user?.email || "暂无邮箱"}
+              {user?.email || "example@gmail.com"}
             </Text>
           </View>
         </TouchableOpacity>
@@ -149,7 +174,7 @@ export default function CustomDrawerContent(
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigateAndCloseDrawer("/favorites")}
+          onPress={() => navigateAndCloseDrawer("/(screen)/my-collects")}
         >
           <AntDesign name="star" size={24} color={theme.colors.primary} />
           <Text style={[styles.menuText, { color: theme.colors.primary }]}>
@@ -205,6 +230,12 @@ const styles = StyleSheet.create({
 
     // Android 阴影
     elevation: 5,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    width: '100%',
+    marginBottom: -10,
   },
   userInfo: {
     flexDirection: "row",

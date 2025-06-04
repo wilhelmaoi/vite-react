@@ -1,12 +1,13 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, Image, TouchableOpacity, Modal, Animated, PanResponder, Alert, ActivityIndicator } from 'react-native';
 import { Surface, Text, TextInput, Button, IconButton, Card, Chip, Dialog, Portal } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useAuthStore } from '../../src/context/store';
 import request from '../../src/database/request';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../src/theme/ThemeContext';
+import * as FileSystem from 'expo-file-system';
 
 // 定义文本片段的类型
 interface TextSegment {
@@ -16,7 +17,8 @@ interface TextSegment {
 
 export default function Post() {
   const theme = useTheme();
-  const [content, setContent] = useState('');
+  const { initialContent } = useLocalSearchParams();
+  const [content, setContent] = useState(initialContent as string || '');
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const { username, user } = useAuthStore();
   const [images, setImages] = useState<string[]>([]);
@@ -124,10 +126,9 @@ export default function Post() {
   // 获取当前位置信息
   const getLocationAsync = async () => {
     let currentLocation: Location.LocationObject | null = null;
-    
+   
     try {
       setIsLocationLoading(true);
-      
       console.log('开始获取位置权限...');
       // 检查位置权限
       const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
@@ -145,7 +146,7 @@ export default function Post() {
           return;
         }
       }
-      
+
       // 检查位置服务是否启用
       const enabled = await Location.hasServicesEnabledAsync();
       console.log('位置服务是否启用:', enabled);
@@ -158,20 +159,35 @@ export default function Post() {
         );
         return;
       }
-      
-      console.log('获取当前位置...');
+       // 如果在模拟器或无法获取位置，使用桂林作为默认位置
+    // currentLocation = {
+    //   coords: {
+    //     latitude: 25.2736,
+    //     longitude: 110.2907,
+    //     altitude: null,
+    //     accuracy: 800,
+    //     altitudeAccuracy: null,
+    //     heading: null,
+    //     speed: null
+    //   },
+    //   timestamp: Date.now()
+    // };
+    // setLocation(currentLocation);
+
+
+      // console.log('获取当前位置...');
       // 获取当前位置（添加超时和更高精度选项）
-      try {
-        const loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Highest,
-          timeInterval: 1000,
-          mayShowUserSettingsDialog: true
-        });
-        currentLocation = loc;
-        setLocation(loc);
-        console.log('成功获取位置:', loc);
-      } catch (locError) {
-        console.error('获取当前位置失败:', locError);
+      // try {
+      //   const loc = await Location.getCurrentPositionAsync({
+      //     accuracy: Location.Accuracy.Highest,
+      //     timeInterval: 1000,
+      //     mayShowUserSettingsDialog: true
+      //   });
+      //   currentLocation = loc;
+      //   setLocation(loc);
+      //   console.log('成功获取位置:', loc);
+      // } catch (locError) {
+      //   console.error('获取当前位置失败:', locError);
         
         // 尝试获取最后已知位置作为后备
         console.log('尝试获取最后已知位置...');
@@ -184,69 +200,40 @@ export default function Post() {
           } else {
             console.log('没有最后已知位置，使用默认位置');
             
-            // 如果在模拟器或无法获取位置，使用桂林作为默认位置
-            currentLocation = {
-              coords: {
-                latitude: 25.2736,
-                longitude: 110.2907,
-                altitude: null,
-                accuracy: 800,
-                altitudeAccuracy: null,
-                heading: null,
-                speed: null
-              },
-              timestamp: Date.now()
-            };
-            setLocation(currentLocation);
-            console.log('使用默认位置（广西桂林）:', currentLocation);
+
           }
         } catch (lastLocationError) {
           console.error('获取最后已知位置失败:', lastLocationError);
           
-          // 如果所有方法都失败，使用默认位置
-          currentLocation = {
-            coords: {
-              latitude: 25.2736,
-              longitude: 110.2907,
-              altitude: null,
-              accuracy: 800,
-              altitudeAccuracy: null,
-              heading: null,
-              speed: null
-            },
-            timestamp: Date.now()
-          };
-          setLocation(currentLocation);
-          console.log('获取任何位置失败，使用默认位置（广西桂林）');
         }
-      }
+     
       
       // 从这里开始使用获取到的位置
-      const { latitude, longitude } = currentLocation.coords;
+      const { latitude, longitude } = currentLocation?.coords || { latitude: 25.2736, longitude: 110.2907 };
       console.log(`使用坐标进行地理编码: lat=${latitude}, lng=${longitude}`);
       
-      try {
-        // 优先使用高德地图API进行反向地理编码
-        const amapKey = 'fdc59e296bdc1805c29b9c8a2a8993bc';
-        const geocodeUrl = `https://restapi.amap.com/v3/geocode/regeo?key=${amapKey}&location=${longitude},${latitude}&poitype=&radius=1000&extensions=all&batch=false&roadlevel=0`;
+      // try {
+      //   // 优先使用高德地图API进行反向地理编码
+      //   const amapKey = 'fdc59e296bdc1805c29b9c8a2a8993bc';
+      //   const geocodeUrl = `https://restapi.amap.com/v3/geocode/regeo?key=${amapKey}&location=${longitude},${latitude}&poitype=&radius=1000&extensions=all&batch=false&roadlevel=0`;
         
-        console.log('请求高德地图API:', geocodeUrl);
-        const response = await fetch(geocodeUrl);
-        const data = await response.json();
-        console.log('高德地图响应:', data);
+      //   console.log('请求高德地图API:', geocodeUrl);
+      //   const response = await fetch(geocodeUrl);
+      //   const data = await response.json();
+      //   console.log('高德地图响应:', data);
         
-        if (data.status === '1' && data.regeocode) {
-          // 提取城市信息
-          const addressComponent = data.regeocode.addressComponent;
-          const city = addressComponent.city || addressComponent.district || addressComponent.province || '未知位置';
-          console.log('解析到的城市:', city);
-          setLocationName(city);
-        } else {
-          console.log('高德地图API返回错误，尝试Expo地理编码');
-          throw new Error('高德地图API返回错误');
-        }
-      } catch (aMapError) {
-        console.error('高德地图API调用失败:', aMapError);
+      //   if (data.status === '1' && data.regeocode) {
+      //     // 提取城市信息
+      //     const addressComponent = data.regeocode.addressComponent;
+      //     const city = addressComponent.city || addressComponent.district || addressComponent.province || '未知位置';
+      //     console.log('解析到的城市:', city);
+      //     setLocationName(city);
+      //   } else {
+      //     console.log('高德地图API返回错误，尝试Expo地理编码');
+      //     throw new Error('高德地图API返回错误');
+      //   }
+      // } catch (aMapError) {
+      //   console.error('高德地图API调用失败:', aMapError);
         
         // 高德API调用失败，回退到Expo的反向地理编码（国外可用）
         try {
@@ -270,20 +257,14 @@ export default function Post() {
           }
         } catch (expoGeoError) {
           console.error('Expo地理编码失败:', expoGeoError);
-          setLocationName('未知位置');
+          
+          // 使用备用方案 - 在 Geocoder 服务不可用时直接使用预设位置名
+          setLocationName('桂林');
         }
+      } finally {
+        setIsLocationLoading(false);
       }
-    } catch (error) {
-      console.error('整个位置获取流程失败:', error);
-      Alert.alert(
-        '获取位置失败', 
-        `详细错误: ${error.message}。请确保位置服务已开启且应用有位置权限。`,
-        [{ text: '确定', onPress: () => setLocationName('未知位置') }]
-      );
-    } finally {
-      setIsLocationLoading(false);
-    }
-  };
+    };
   
   // 处理位置标签点击
   const handleLocationPress = () => {
@@ -300,15 +281,16 @@ export default function Post() {
     router.back();
   };
 
-  // 选择并上传图片
+  // 选择并上传图片或视频
   const pickImage = async () => {
     try {
-      // 选择图片
+      // 选择媒体文件
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images',"videos"],
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 0.5, // 降低质量以减小文件大小
+        videoMaxDuration: 60, // 限制视频最大时长为60秒
       });
       
       if (result.canceled) {
@@ -318,24 +300,71 @@ export default function Post() {
       // 显示本地预览
       const localUri = result.assets[0].uri;
       const assetType = result.assets[0].type || 'image'; // 获取媒体类型
+      
+      // 检查文件大小
+      const fileInfo = await FileSystem.getInfoAsync(localUri);
+      console.log('选择的文件大小: ', fileInfo.exists ? (fileInfo.size || 0) / (1024 * 1024) : 0, 'MB');
+      
+      // 如果文件超过8MB，提示用户
+      if (fileInfo.exists && fileInfo.size && fileInfo.size > 8 * 1024 * 1024) {
+        if (assetType === 'video') {
+          Alert.alert(
+            '文件过大', 
+            '视频文件大小超过8MB，可能导致上传失败。建议选择更短或更小的视频。',
+            [
+              {text: '取消', style: 'cancel'},
+              {text: '继续上传', onPress: () => uploadMedia(localUri, assetType)}
+            ]
+          );
+        } else {
+          Alert.alert(
+            '文件过大', 
+            '图片文件大小超过8MB，可能导致上传失败。是否继续?',
+            [
+              {text: '取消', style: 'cancel'},
+              {text: '继续上传', onPress: () => uploadMedia(localUri, assetType)}
+            ]
+          );
+        }
+      } else {
+        // 文件大小合适，直接上传
+        uploadMedia(localUri, assetType);
+      }
+    } catch (error) {
+      console.error('选择媒体文件失败:', error);
+      Alert.alert('上传失败', '请检查网络连接后重试');
+    }
+  };
+  
+  // 上传媒体文件到服务器
+  const uploadMedia = async (localUri, assetType) => {
+    try {
       setImages([...images, localUri]);
       
       // 准备contentType
       let contentType;
+      let fileName;
+      
       if (assetType === 'video') {
         contentType = 'video/mp4'; // 默认视频格式
+        fileName = 'video.mp4';
       } else {
         // 根据文件扩展名判断图片类型
         if (localUri.endsWith('.jpg') || localUri.endsWith('.jpeg')) {
           contentType = 'image/jpeg';
+          fileName = 'image.jpg';
         } else if (localUri.endsWith('.png')) {
           contentType = 'image/png';
+          fileName = 'image.png';
         } else if (localUri.endsWith('.gif')) {
           contentType = 'image/gif';
+          fileName = 'image.gif';
         } else if (localUri.endsWith('.webp')) {
           contentType = 'image/webp';
+          fileName = 'image.webp';
         } else {
           contentType = 'image/jpeg'; // 默认格式
+          fileName = 'image.jpg';
         }
       }
       
@@ -344,10 +373,13 @@ export default function Post() {
       formData.append('image', {
         uri: localUri,
         type: contentType,
-        name: assetType === 'video' ? 'video.mp4' : 'image.jpg',
+        name: fileName,
       } as any);
       
-      // 上传图片
+      // 显示上传进度
+      setUploadProgress(0);
+      
+      // 上传媒体文件
       const response = await request({
         method: 'POST',
         url: '/post/upload-temp-image',
@@ -355,20 +387,36 @@ export default function Post() {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
+        onUploadProgress: (progressEvent: any) => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            setUploadProgress(percentCompleted);
+          }
+        }
       });
+      
+      setUploadProgress(0);
       
       if (response.data.code === 200) {
         // 保存临时路径，用于最终发帖时传给后端
         setTempImagePaths([...tempImagePaths, response.data.data.tempPath]);
-        console.log('图片已上传到临时存储:', response.data.data);
+        console.log('媒体文件已上传到临时存储:', response.data.data);
       } else {
-        Alert.alert('上传失败', response.data.msg || '图片上传失败');
+        Alert.alert('上传失败', response.data.msg || '媒体文件上传失败');
         // 移除本地预览
         setImages(images.filter(img => img !== localUri));
       }
     } catch (error) {
-      console.error('选择或上传图片失败:', error);
-      Alert.alert('上传失败', '请检查网络连接后重试');
+      console.error('上传媒体文件失败:', error);
+      // 移除本地预览
+      setImages(images.filter(img => img !== localUri));
+      
+      // 检查是否是文件大小超出限制错误
+      if (error.response && error.response.status === 413) {
+        Alert.alert('上传失败', '文件大小超出服务器限制');
+      } else {
+        Alert.alert('上传失败', '请检查网络连接后重试');
+      }
     }
   };
 
@@ -541,6 +589,14 @@ export default function Post() {
     setShowAIDialog(true);
   };
 
+  // 初始化时处理标签
+  useEffect(() => {
+    if (initialContent) {
+      setFormattedContent(getFormattedContent(initialContent as string));
+      setCurrentTags(extractTags(initialContent as string));
+    }
+  }, [initialContent]);
+
   return (
     <Surface style={[styles.root, { backgroundColor: theme.colors.background }]}>
       {/* 顶部栏 */}
@@ -675,6 +731,24 @@ export default function Post() {
               
               {/* 已选图片预览 */}
               {images.length > 0 && renderImagePreviews()}
+
+              {/* 上传进度显示 */}
+              {uploadProgress > 0 && (
+                <View style={styles.progressContainer}>
+                  <Text style={{ marginBottom: 8 }}>上传中: {uploadProgress}%</Text>
+                  <View style={styles.progressBar}>
+                    <View 
+                      style={[
+                        styles.progressFill, 
+                        { 
+                          width: `${uploadProgress}%`,
+                          backgroundColor: theme.colors.primary 
+                        }
+                      ]} 
+                    />
+                  </View>
+                </View>
+              )}
             </View>
           </Card.Content>
         </View> 
@@ -755,9 +829,9 @@ export default function Post() {
             {images.length > 0 && (
               <View style={styles.aiImagePreview}>
                 <Image source={{ uri: images[0] }} style={styles.aiImage} />
-                <Text style={{ marginTop: 8, color: theme.colors.outline }}>
+                {/* <Text style={{ marginTop: 8, color: theme.colors.outline }}>
                   将使用第一张图片生成配文
-                </Text>
+                </Text> */}
               </View>
             )}
           </Dialog.Content>
@@ -1006,5 +1080,21 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 8,
     resizeMode: 'cover',
+  },
+  progressContainer: {
+    marginVertical: 10,
+    width: '100%',
+    alignItems: 'center',
+  },
+  progressBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
   },
 });

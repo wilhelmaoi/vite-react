@@ -16,7 +16,7 @@ const isVideoFile = (url: string): boolean => {
   return videoExtensions.some(ext => lowerCaseUrl.endsWith(ext));
 };
 
-export default function MyPosts() {
+export default function MyCollects() {
   const theme = useTheme();
   const router = useRouter();
   const { username, user, avatarUri, nickname } = useAuthStore();
@@ -120,9 +120,6 @@ export default function MyPosts() {
       
       // 对于每个帖子ID，获取当前用户是否点赞
       const likePromises = uniquePostIds.map(async (postId) => {
-        // 如果已经有缓存，就不再请求
-        // if (likedPosts[postId] !== undefined) return { postId, liked: likedPosts[postId] };
-        
         try {
           // 改为使用POST请求，将username放在请求体中，避免Spring参数解析问题
           const response = await request({
@@ -161,7 +158,7 @@ export default function MyPosts() {
     }
   };
 
-  // 加载用户帖子数据
+  // 加载用户收藏的帖子数据
   const loadPosts = useCallback(async (pageNum = 1, refresh = false) => {
     if (!username) {
       console.error('用户未登录');
@@ -180,12 +177,12 @@ export default function MyPosts() {
 
       const response = await request({
         method: 'GET',
-        url: `/post/user/${username}?page=${pageNum}&size=10`,
+        url: `/collect/user/${username}?page=${pageNum}&size=10`,
       });
 
       if (response.data.code === 200) {
         const newPosts = response.data.data;
-        console.log(`加载了${newPosts.length}条用户帖子`);
+        console.log(`加载了${newPosts.length}条收藏帖子`);
         
         if (refresh || pageNum === 1) {
           setPosts(newPosts);
@@ -219,10 +216,10 @@ export default function MyPosts() {
           }
         }
       } else {
-        console.error('获取用户帖子失败:', response.data.msg);
+        console.error('获取收藏帖子失败:', response.data.msg);
       }
     } catch (error) {
-      console.error('加载用户帖子数据出错:', error);
+      console.error('加载收藏帖子数据出错:', error);
     } finally {
       setRefreshing(false);
       setLoading(false);
@@ -508,10 +505,10 @@ export default function MyPosts() {
     
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>您还没有发布任何帖子</Text>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/Post')}>
+        <Text style={styles.emptyText}>您还没有收藏任何帖子</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/home')}>
           <Text style={[styles.createPostText, { color: theme.colors.primary }]}>
-            立即发布第一个帖子
+            去发现更多精彩内容
           </Text>
         </TouchableOpacity>
       </View>
@@ -522,7 +519,7 @@ export default function MyPosts() {
     <Surface style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Appbar.Header>
         <Appbar.BackAction onPress={() => router.back()} />
-        <Appbar.Content title="我的发帖" />
+        <Appbar.Content title="我的收藏" />
       </Appbar.Header>
       
       <FlatList
@@ -653,4 +650,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});

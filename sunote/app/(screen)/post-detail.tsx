@@ -7,7 +7,10 @@ import {
   TouchableOpacity, 
   FlatList, 
   KeyboardAvoidingView, 
-  Platform 
+  Platform,
+  Keyboard,
+  Dimensions,
+  Alert
 } from 'react-native';
 import { 
   Surface, 
@@ -28,8 +31,15 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { useAuthStore } from '../../src/context/store';
 import * as FileSystem from 'expo-file-system';
 import { PostItem, CommentItem } from '../../src/context/store';
+import SimpleImageViewer from '../../src/components/SimpleImageViewer';
+import VideoThumbnail from '../../src/components/VideoThumbnail';
 
-
+// 判断URL是否是视频文件
+const isVideoFile = (url: string): boolean => {
+  const videoExtensions = ['.mp4', '.mov', '.avi', '.wmv', '.flv', '.mkv', '.webm', '.m4v', '.3gp'];
+  const lowerCaseUrl = url.toLowerCase();
+  return videoExtensions.some(ext => lowerCaseUrl.endsWith(ext));
+};
 
 export default function PostDetail() {
   const theme = useTheme();
@@ -46,8 +56,108 @@ export default function PostDetail() {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
+  const [isFollowed, setIsFollowed] = useState(false);
   
   const scrollViewRef = useRef<ScrollView>(null);
+  
+
+  
+  // 获取用户头像的函数
+  const fetchUserAvatar = async (username: string) => {
+    try {
+      const url = `/user/avatar/${username}`;
+      const response = await request({
+        method: 'GET',
+        url: url,
+      });
+      
+      if (response.data.code === 200 && response.data.data?.avatarUrl) {
+        const avatarUrl = response.data.data.avatarUrl;
+        if (avatarUrl.startsWith('http')) {
+          setPost(currentPost => currentPost ? {
+            ...currentPost,
+            avatar: avatarUrl
+          } : null);
+        }
+      }
+    } catch (error) {
+      console.error('获取用户头像失败:', error);
+    }
+  };
+  
+  // 获取评论用户头像
+  const fetchCommentUserAvatars = async (usernames: string[]) => {
+    try {
+      // 过滤掉重复的用户名
+      const uniqueUsernames = [...new Set(usernames)];
+      
+      console.log(`开始获取${uniqueUsernames.length}个用户的头像`);
+      
+      // 对于每个用户名，获取其头像 URL
+      const avatarPromises = uniqueUsernames.map(async (name) => {
+        // 如果是当前用户并且已有本地头像，直接使用
+        if (name === username && avatarUri) {
+          console.log(`使用当前用户本地头像: ${name}`);
+          return { username: name, avatar: avatarUri };
+        }
+        
+        try {
+          const response = await request({
+            method: 'GET',
+            url: `/user/avatar/${name}`,
+          });
+          
+          if (response.data.code === 200 && response.data.data) {
+            const avatarData = response.data.data;
+            const avatarUrl = avatarData.avatarUrl || '';
+            console.log(`获取到用户 ${name} 的头像URL: ${avatarUrl ? avatarUrl.substring(0, 30) + '...' : '无'}`);
+            
+            // 确保URL格式正确
+            if (avatarUrl && !avatarUrl.startsWith('http')) {
+              console.error(`用户 ${name} 的头像URL格式不正确:`, avatarUrl);
+              return { username: name, avatar: '' };
+            }
+            
+            return { 
+              username: name, 
+              avatar: avatarUrl
+            };
+          }
+          console.log(`未能获取到用户 ${name} 的头像，响应码: ${response.data.code}`);
+          return { username: name, avatar: '' };
+        } catch (error) {
+          console.error(`获取用户 ${name} 头像时出错:`, error);
+          return { username: name, avatar: '' };
+        }
+      });
+      
+      const avatarResults = await Promise.all(avatarPromises);
+      
+      // 构建头像映射对象
+      const newAvatars: Record<string, string> = {};
+      avatarResults.forEach(item => {
+        if (item.avatar) {
+          newAvatars[item.username] = item.avatar;
+        }
+      });
+      
+      console.log(`成功获取了${Object.keys(newAvatars).length}个用户的头像`);
+      
+      // 更新评论列表中的头像
+      setComments(prevComments => 
+        prevComments.map(comment => ({
+          ...comment,
+          avatar: newAvatars[comment.username] || comment.avatar || ''
+        }))
+      );
+      
+      console.log('评论头像已更新');
+    } catch (error) {
+      console.error('获取评论用户头像失败:', error);
+    }
+  };
   
   // 加载帖子详情
   useEffect(() => {
@@ -61,10 +171,48 @@ export default function PostDetail() {
           url: `/post/${id}`,
         });
         
+        console.log(`获取帖子详情响应: id=${id}, code=${response.data?.code}`);
+        
         if (response.data.code === 200) {
-          setPost(response.data.data);
-          // 检查用户是否已经点赞/收藏
-          checkUserInteraction();
+          const postData = response.data.data;
+          console.log(`帖子数据: username=${postData.username}, 是否有avatar=${Boolean(postData.avatar)}`);
+          
+          // 检查帖子数据中是否已包含头像信息
+          if (postData.avatar) {
+            console.log(`帖子数据已包含头像: ${postData.avatar.substring(0, 30)}...`);
+          } else if (postData.username === username && avatarUri) {
+            // 如果是当前用户的帖子，并且有本地头像，直接使用
+            console.log('当前用户的帖子，使用本地头像');
+            postData.avatar = avatarUri;
+          }
+          
+          // 先设置帖子数据
+          setPost(postData);
+          
+          // 如果没有头像，则获取帖子作者头像
+          if (postData.username === username && avatarUri) {
+            // 如果是当前用户，直接使用本地头像
+            setPost({
+              ...postData,
+              avatar: avatarUri
+            });
+          } else  {
+            // 异步获取用户头像
+            setTimeout(() => {
+              fetchUserAvatar(postData.username);
+            }, 100);
+          }
+          
+          // 检查用户交互状态
+          setTimeout(() => {
+            // 检查用户是否已经点赞/收藏
+            checkUserInteraction();
+            
+            // 检查关注状态
+            if (username && postData.username !== username) {
+              checkFollowStatus(postData.username);
+            }
+          }, 100);
         } else {
           console.error('获取帖子详情失败:', response.data.msg);
         }
@@ -91,7 +239,15 @@ export default function PostDetail() {
         });
         
         if (response.data.code === 200) {
-          setComments(response.data.data || []);
+          const commentData = response.data.data || [];
+          setComments(commentData);
+          
+          // 获取评论用户头像
+          if (commentData.length > 0) {
+            setTimeout(() => {
+              fetchCommentUserAvatars(commentData.map(comment => comment.username));
+            }, 100);
+          }
         } else {
           console.error('获取评论失败:', response.data.msg);
         }
@@ -105,6 +261,7 @@ export default function PostDetail() {
     fetchComments();
   }, [id]);
   
+  
   // 检查用户交互状态（点赞/收藏）
   const checkUserInteraction = async () => {
     if (!username || !id) return;
@@ -112,9 +269,12 @@ export default function PostDetail() {
     try {
       // 检查是否点赞
       const likeResponse = await request({
-        method: 'GET',
-        url: `/post/${id}/like/check?username=${username}`,
+        method: 'POST',
+        url: `/post/${id}/like/check`,
+        data: { username }
       });
+      
+      console.log(`检查点赞状态响应: postId=${id}, code=${likeResponse.data?.code}, data=`, likeResponse.data?.data);
       
       if (likeResponse.data.code === 200) {
         setLiked(likeResponse.data.data);
@@ -134,31 +294,112 @@ export default function PostDetail() {
     }
   };
   
+  // 添加检查关注状态的函数
+  const checkFollowStatus = async (postUsername: string) => {
+    if (!username || !postUsername || username === postUsername) return;
+    
+    try {
+      const response = await request({
+        method: 'GET',
+        url: `/user/follow/check?followerUsername=${username}&followingUsername=${postUsername}`,
+      });
+      
+      if (response.data?.code === 200) {
+        setIsFollowed(response.data.data);
+      }
+    } catch (error) {
+      console.error('检查关注状态失败:', error);
+    }
+  };
+  
+  // 添加关注用户功能
+  const handleFollow = async () => {
+    if (!username || !post || username === post.username) return;
+    
+    try {
+      // 先更新UI状态，提高响应速度
+      setIsFollowed(!isFollowed);
+      
+      // 发送请求到服务器
+      const response = await request({
+        method: 'POST',
+        url: '/user/follow',
+        data: { 
+          followerUsername: username, 
+          followingUsername: post.username 
+        }
+      });
+      
+      if (response.data?.code !== 200) {
+        console.error('关注请求失败:', response.data?.msg);
+        // 如果请求失败，回滚状态
+        setIsFollowed(isFollowed);
+        Alert.alert('操作失败', response.data?.msg || '关注操作失败，请稍后重试');
+      }
+    } catch (error) {
+      console.error('关注操作失败:', error);
+      // 发生错误时，也需要回滚状态
+      setIsFollowed(isFollowed);
+      Alert.alert('操作失败', '关注操作失败，请稍后重试');
+    }
+  };
+  
   // 处理点赞
   const handleLike = async () => {
     if (!username || !id) return;
     
     try {
+      const currentLiked = liked;
+      console.log(`点赞操作: postId=${id}, 当前状态=${currentLiked ? '已点赞' : '未点赞'}`);
+      
+      // 先更新UI状态，提高响应速度
+      setLiked(!currentLiked);
+      
+      // 更新本地点赞数
+      if (post) {
+        setPost({
+          ...post,
+          likeCount: currentLiked ? post.likeCount - 1 : post.likeCount + 1
+        });
+      }
+      
+      // 发送请求到服务器
       const response = await request({
         method: 'POST',
         url: `/post/${id}/like`,
         data: { username }
       });
       
-      if (response.data.code === 200) {
-        setLiked(!liked);
-        // 更新点赞数
+      console.log(`点赞请求响应: postId=${id}, code=${response.data?.code}, data=`, response.data?.data);
+
+      if (response.data?.code !== 200) {
+        console.error('点赞请求失败:', response.data?.msg);
+        // 如果请求失败，回滚状态
+        setLiked(currentLiked);
         if (post) {
           setPost({
             ...post,
-            likeCount: liked ? post.likeCount - 1 : post.likeCount + 1
+            likeCount: currentLiked ? post.likeCount + 1 : post.likeCount - 1
           });
         }
       } else {
-        console.error('点赞操作失败:', response.data.msg);
+        // 服务器返回成功，可以更新为服务器返回的实际状态
+        const serverLiked = response.data?.data?.liked;
+        if (serverLiked !== undefined) {
+          setLiked(serverLiked);
+        }
       }
     } catch (error) {
-      console.error('点赞操作出错:', error);
+      console.error('点赞操作失败:', error);
+      // 发生错误时，也需要回滚状态
+      const currentLiked = liked;
+      setLiked(currentLiked);
+      if (post) {
+        setPost({
+          ...post,
+          likeCount: currentLiked ? post.likeCount + 1 : post.likeCount - 1
+        });
+      }
     }
   };
   
@@ -189,6 +430,7 @@ export default function PostDetail() {
     
     try {
       setCommentSubmitting(true);
+      console.log(`提交评论: postId=${id}, username=${username}, content=${commentText.substring(0, 20)}...`);
       
       const response = await request({
         method: 'POST',
@@ -201,9 +443,37 @@ export default function PostDetail() {
       });
       
       if (response.data.code === 200) {
+        console.log('评论提交成功，获取返回的评论数据');
         // 添加新评论到列表
         const newComment = response.data.data;
-        setComments([...comments, newComment]);
+        
+        // 添加头像信息
+        let commentAvatar = '';
+        
+        // 如果是当前用户，并且有头像，则添加头像信息
+        if (avatarUri) {
+          commentAvatar = avatarUri;
+          console.log(`添加当前用户头像到评论: ${avatarUri.substring(0, 30)}...`);
+        } else if (userAvatars[username]) {
+          // 从缓存中获取
+          commentAvatar = userAvatars[username];
+          console.log(`从缓存获取用户头像: ${commentAvatar.substring(0, 30)}...`);
+        }
+        
+        // 添加头像到评论对象
+        const commentWithAvatar = {
+          ...newComment,
+          avatar: commentAvatar
+        };
+        
+        // 更新评论列表
+        setComments([...comments, commentWithAvatar]);
+        
+        // 同时更新头像缓存
+        if (commentAvatar) {
+          setUserAvatars(prev => ({ ...prev, [username]: commentAvatar }));
+        }
+        
         setCommentText('');
         
         // 更新评论数
@@ -255,9 +525,20 @@ export default function PostDetail() {
   
   // 查看大图
   const handleViewImage = (index: number) => {
-    setCurrentImageIndex(index);
-    setImageViewerVisible(true);
+    // 确认当前图片不是视频
+    if (post?.imageUrls && !isVideoFile(post.imageUrls[index])) {
+      setCurrentImageIndex(index);
+      setImageViewerVisible(true);
+    }
   };
+  
+  // 关闭图片查看器
+  const handleCloseImageViewer = () => {
+    setImageViewerVisible(false);
+  };
+  
+  // 过滤出不是视频的图片URL，用于图片查看器
+  const imageOnlyUrls = post?.imageUrls?.filter(url => !isVideoFile(url)) || [];
   
   // 渲染评论项
   const renderCommentItem = ({ item }: { item: CommentItem }) => {
@@ -267,10 +548,14 @@ export default function PostDetail() {
       <View style={styles.commentItem}>
         <View style={styles.commentHeader}>
           <View style={styles.commentUserInfo}>
-            {isCurrentUser && avatarUri ? (
+            {item.avatar ? (
               <Avatar.Image 
                 size={32}
-                source={{ uri: avatarUri }}
+                source={{ uri: item.avatar }}
+                style={{ backgroundColor: theme.colors.surfaceVariant }}
+                onError={(e) => {
+                  console.error('评论头像加载失败:', item.avatar, e.nativeEvent.error);
+                }}
               />
             ) : (
               <Avatar.Text 
@@ -332,7 +617,7 @@ export default function PostDetail() {
       </Appbar.Header>
       
       <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : 'height'}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -345,11 +630,22 @@ export default function PostDetail() {
             <Card.Content>
               {/* 用户信息区 */}
               <View style={styles.userInfoContainer}>
-                <Avatar.Text 
-                  size={45} 
-                  label={post.username.substring(0, 2).toUpperCase()} 
-                  style={{ backgroundColor: theme.colors.primary }}
-                />
+                {post.avatar ? (
+                  <Avatar.Image 
+                    size={45}
+                    source={{ uri: post.avatar }}
+                    style={{ backgroundColor: theme.colors.surfaceVariant }}
+                    onError={(e) => {
+                      console.error('头像加载失败:', post.avatar, e.nativeEvent.error);
+                    }}
+                  />
+                ) : (
+                  <Avatar.Text 
+                    size={45} 
+                    label={post.username.substring(0, 2).toUpperCase()} 
+                    style={{ backgroundColor: theme.colors.primary }}
+                  />
+                )}
                 <View style={styles.userTextContainer}>
                   <Text style={[styles.username, { color: theme.colors.primary }]}>
                     {post.nickname}
@@ -358,6 +654,38 @@ export default function PostDetail() {
                     {formatDate(post.createdAt)}
                   </Text>
                 </View>
+                
+                {/* 关注按钮 - 仅当不是当前用户时显示 */}
+                {username && post.username !== username && (
+                  <TouchableOpacity 
+                    onPress={handleFollow}
+                    style={[
+                      styles.followButton, 
+                      { 
+                        borderColor: isFollowed ? theme.colors.outline : theme.colors.primary,
+                        borderWidth: 1,
+                        backgroundColor: isFollowed ? theme.colors.surfaceVariant : 'transparent' 
+                      }
+                    ]}
+                  >
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <IconButton 
+                        icon={isFollowed ? "account-check" : "account-plus-outline"} 
+                        size={14} 
+                        iconColor={isFollowed ? theme.colors.outline : theme.colors.primary}
+                        style={{margin: 0, padding: 0, marginRight: -5}}
+                      />
+                      <Text style={{
+                        color: isFollowed ? theme.colors.outline : theme.colors.primary, 
+                        fontSize: 13, 
+                        marginLeft: 4,
+                        marginBottom: 3
+                      }}>
+                        {isFollowed ? '已关注' : '关注'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* 内容区 */}
@@ -380,7 +708,7 @@ export default function PostDetail() {
                 </View>
               )}
 
-              {/* 图片区 */}
+              {/* 图片和视频区 */}
               {post.imageUrls && post.imageUrls.length > 0 && (
                 <View style={styles.imagesContainer}>
                   {post.imageUrls.map((url, index) => (
@@ -389,11 +717,19 @@ export default function PostDetail() {
                       style={styles.imageWrapper}
                       onPress={() => handleViewImage(index)}
                     >
-                      <Image 
-                        source={{ uri: url }}
-                        style={styles.postImage}
-                        resizeMode="cover"
-                      />
+                      {isVideoFile(url) ? (
+                        <VideoThumbnail 
+                          videoUrl={url} 
+                          width={160} 
+                          height={160}
+                        />
+                      ) : (
+                        <Image 
+                          source={{ uri: url }}
+                          style={styles.postImage}
+                          resizeMode="cover"
+                        />
+                      )}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -481,19 +817,29 @@ export default function PostDetail() {
                 </Text>
               </View>
             ) : (
-              comments.map((comment) => renderCommentItem({ item: comment }))
+              comments.map((comment, index) => (
+                <React.Fragment key={comment.id || index}>
+                  {renderCommentItem({ item: comment })}
+                </React.Fragment>
+              ))
             )}
           </View>
         </ScrollView>
         
         {/* 发表评论区 */}
-        <View style={[styles.commentInput, { backgroundColor: theme.colors.surface }]}>
+        <View style={[
+          styles.commentInput, 
+          { 
+            backgroundColor: theme.colors.surface,
+          }
+        ]}>
           <TextInput
             mode="outlined"
             placeholder="发表评论..."
             value={commentText}
             onChangeText={setCommentText}
             style={styles.commentTextField}
+            outlineStyle={{ borderRadius: 25 }}
             right={
               <TextInput.Icon 
                 icon="send" 
@@ -505,6 +851,16 @@ export default function PostDetail() {
           />
         </View>
       </KeyboardAvoidingView>
+      
+      {/* 图片查看器 - 只显示图片，不显示视频 */}
+      {imageOnlyUrls.length > 0 && (
+        <SimpleImageViewer
+          visible={imageViewerVisible}
+          imageUrls={imageOnlyUrls}
+          initialIndex={currentImageIndex}
+          onClose={handleCloseImageViewer}
+        />
+      )}
     </Surface>
   );
 }
@@ -650,8 +1006,23 @@ const styles = StyleSheet.create({
     padding: 8,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    paddingHorizontal: 12,
   },
   commentTextField: {
     backgroundColor: 'white',
+    borderRadius: 25,
+    fontSize: 15,
+  },
+  followButton: {
+    borderRadius: 15,
+    height: 30,
+    paddingHorizontal: 10,
+    marginLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    position: 'absolute',
+    right: 0,
+    top: 10,
   },
 }); 

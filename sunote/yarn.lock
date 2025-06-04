@@ -1334,7 +1334,7 @@
     find-up "^5.0.0"
     js-yaml "^4.1.0"
 
-"@gorhom/bottom-sheet@^5":
+"@gorhom/bottom-sheet@^5.1.4":
   version "5.1.4"
   resolved "https://registry.npmmirror.com/@gorhom/bottom-sheet/-/bottom-sheet-5.1.4.tgz#37b5693c4f0e7c5c859ed26597e0bf3d73b21b77"
   integrity sha512-A49fbCLL3wxDhGvEsMzHDpBF+BqVCbXHEhLJo9plPSAxNjjPJFzJ65axj95R38+iqML0gmXyawpZ45PD4EEMAw==
@@ -3399,6 +3399,13 @@ expo-asset@~11.1.5:
     "@expo/image-utils" "^0.7.4"
     expo-constants "~17.1.5"
 
+expo-camera@~16.1.6:
+  version "16.1.6"
+  resolved "https://registry.yarnpkg.com/expo-camera/-/expo-camera-16.1.6.tgz#9badbc3b93cab3386e3e70721d4f3c1983ab539c"
+  integrity sha512-caVSfoTUaayYhH5gicrXWCgBQIVrotPOH3jUDr4vhN5VQDB/+TWaY+le2nQtNXgQEz14Af+H/TNvYpvvNj5Ktg==
+  dependencies:
+    invariant "^2.2.4"
+
 expo-constants@~17.1.5, expo-constants@~17.1.6:
   version "17.1.6"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-17.1.6.tgz#a31b019216f7f7bb4907aeffa2d6bf856751985e"
@@ -3440,7 +3447,7 @@ expo-dev-menu@6.1.10:
   dependencies:
     expo-dev-menu-interface "1.10.0"
 
-expo-file-system@~18.1.10:
+expo-file-system@^18.1.10, expo-file-system@~18.1.10:
   version "18.1.10"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-18.1.10.tgz#22f3bcc2c9a7edcd6bba5ece3c90a8467fda47be"
   integrity sha512-SyaWg+HitScLuyEeSG9gMSDT0hIxbM9jiZjSBP9l9zMnwZjmQwsusE6+7qGiddxJzdOhTP4YGUfvEzeeS0YL3Q==
@@ -3550,6 +3557,11 @@ expo-secure-store@~14.2.3:
   resolved "https://registry.npmmirror.com/expo-secure-store/-/expo-secure-store-14.2.3.tgz#8e74da512e671cec5f7b88679def3d54b59cd49d"
   integrity sha512-hYBbaAD70asKTFd/eZBKVu+9RTo9OSTMMLqXtzDF8ndUGjpc6tmRCoZtrMHlUo7qLtwL5jm+vpYVBWI8hxh/1Q==
 
+expo-sharing@^13.1.5:
+  version "13.1.5"
+  resolved "https://registry.npmmirror.com/expo-sharing/-/expo-sharing-13.1.5.tgz#73d86cdcc037b46ddc82be224dfd3d6bceec497c"
+  integrity sha512-X/5sAEiWXL2kdoGE3NO5KmbfcmaCWuWVZXHu8OQef7Yig4ZgHFkGD11HKJ5KqDrDg+SRZe4ISd6MxE7vGUgm4w==
+
 expo-splash-screen@~0.30.8:
   version "0.30.8"
   resolved "https://registry.npmmirror.com/expo-splash-screen/-/expo-splash-screen-0.30.8.tgz#2e960ccff053bc8ace85eb56f7d6745e4ddfc6b6"
@@ -3584,6 +3596,16 @@ expo-updates-interface@~1.1.0:
   version "1.1.0"
   resolved "https://registry.npmmirror.com/expo-updates-interface/-/expo-updates-interface-1.1.0.tgz#62497d4647b381da9fdb68868ed180203ae737ef"
   integrity sha512-DeB+fRe0hUDPZhpJ4X4bFMAItatFBUPjw/TVSbJsaf3Exeami+2qbbJhWkcTMoYHOB73nOIcaYcWXYJnCJXO0w==
+
+expo-video-thumbnails@^9.1.3:
+  version "9.1.3"
+  resolved "https://registry.npmmirror.com/expo-video-thumbnails/-/expo-video-thumbnails-9.1.3.tgz#c71e1f863f333e7ef8d9dfab28997c21e9cbb7b2"
+  integrity sha512-TWkm5CIF6o/dgVn6xp7m6vSR3xZ4pNHdiFpHES4RhjoxFrDGSuBs4pi9CaWNfXASxinFpVpAUfYG/SNtYCQKXQ==
+
+expo-video@^2.1.9:
+  version "2.1.9"
+  resolved "https://registry.npmmirror.com/expo-video/-/expo-video-2.1.9.tgz#e0cb263f8cb9605c8cf10a79a66a0f8a8e28d97f"
+  integrity sha512-BEainlMBgAI6ww4D2fkG25WwTm+Is8suJp8SCU5Pyxs2TzrTH9q/E4bWcl8ausHGrANspLHvHY7cYlC9pgAGFw==
 
 expo@^53.0.9:
   version "53.0.9"
@@ -5790,10 +5812,10 @@ react-native-pager-view@6.7.1:
   resolved "https://registry.npmmirror.com/react-native-pager-view/-/react-native-pager-view-6.7.1.tgz#60d52dedbcc92ee7037a13287ebeed5f74e49df7"
   integrity sha512-cBSr6xw4g5N7Kd3VGWcf+kmaH7iBWb0DXAf2bVo3bXkzBcBbTOmYSvc0LVLHhUPW8nEq5WjT9LCIYAzgF++EXw==
 
-react-native-paper@5.14.4:
-  version "5.14.4"
-  resolved "https://registry.npmmirror.com/react-native-paper/-/react-native-paper-5.14.4.tgz#8ff978d1aebd6388c752287d557a5f8cb3716fe5"
-  integrity sha512-XtL9ilZGNZfGopt469vNCYqePNvHrZ1v6if0EXIQfXUx0vZ+lY0Cq7wi0Ap4CBxJTPbj71A1BcRyZDu6ogJKpg==
+react-native-paper@5.14.5:
+  version "5.14.5"
+  resolved "https://registry.npmmirror.com/react-native-paper/-/react-native-paper-5.14.5.tgz#7995a2f8171c8355c1cb55c81a6d2074a7dd5abb"
+  integrity sha512-eaIH5bUQjJ/mYm4AkI6caaiyc7BcHDwX6CqNDi6RIxfxfWxROsHpll1oBuwn/cFvknvA8uEAkqLk/vzVihI3AQ==
   dependencies:
     "@callstack/react-theme-provider" "^3.0.9"
     color "^3.1.2"

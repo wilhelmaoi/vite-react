@@ -8,7 +8,7 @@ import {
   View,
   StatusBar,
 } from "react-native";
-import { TextInput, Button, Text, useTheme, Surface } from "react-native-paper";
+import { Button, Text, useTheme, Surface } from "react-native-paper";
 import { useAuthStore, useMaskStore } from "../src/context/store";
 
 import {
@@ -31,6 +31,7 @@ import Animated, {
 import RegisterForm from "./register";
 import { saveUser, User } from "../src/database/sqlite";
 import * as FileSystem from "expo-file-system";
+import CustomInput from "../src/components/CustomInput";
 
 
 
@@ -60,12 +61,12 @@ async function onLoginSuccess(
     saveUser(user); // 存入sqlite
     authStore.setUser(user); // 存入 store
   }
-  const LOCAL_AVATAR_PATH = (FileSystem.cacheDirectory ?? '') + user?.username + "/avatar.jpg";
+  // const LOCAL_AVATAR_PATH = (FileSystem.cacheDirectory ?? '') + user?.username + "/avatar.jpg";
 
-  const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
-  if (fileInfo.exists) {
-    await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
-  }
+  // const fileInfo = await FileSystem.getInfoAsync(LOCAL_AVATAR_PATH);
+  // if (fileInfo.exists) {
+  //   await FileSystem.deleteAsync(LOCAL_AVATAR_PATH, { idempotent: true });
+  // }
 
 }
 
@@ -110,6 +111,9 @@ export default function SignIn() {
   // 创建一个共享值，初值0（完全透明）
   const opacity = useSharedValue(0);
   const visible = useMaskStore((state) => state.visible);
+  
+  // 错误状态
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // 初次进入页面时，自动读取账号密码
@@ -134,6 +138,23 @@ export default function SignIn() {
 
   const handleSignIn = async () => {
     try {
+      // 表单验证
+      const newErrors: Record<string, string> = {};
+      
+      if (!username.trim()) {
+        newErrors.username = '用户名不能为空';
+      }
+      
+      if (!password.trim()) {
+        newErrors.password = '密码不能为空';
+      }
+      
+      setErrors(newErrors);
+      
+      if (Object.keys(newErrors).length > 0) {
+        return;
+      }
+      
       console.log("账号信息", username, password);
       const response = await request.post("/login", {
         username,
@@ -162,36 +183,34 @@ export default function SignIn() {
   };
 
   return (
-    <Surface style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* <Pressable
-     
-      onPress={handleClosePress}
-    /> */}
 
+    
+    <Surface style={{ flex: 1, backgroundColor: theme.colors.background }}>  
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <Text variant="headlineMedium" style={styles.title}>
+        <Text variant="headlineMedium" style={[styles.title, {color:theme.colors.primary}]}>
           欢迎登录
         </Text>
-        <TextInput
+        
+        <CustomInput
           label="用户名"
           value={username}
           onChangeText={setUsername}
-          style={styles.input}
-          mode="outlined"
-          left={<TextInput.Icon icon="account" />}
+          placeholder="请输入用户名"
+          error={errors.username}
         />
-        <TextInput
+        
+        <CustomInput
           label="密码"
           value={password}
           onChangeText={setPassword}
+          placeholder="请输入密码"
           secureTextEntry
-          mode="outlined"
-          style={styles.input}
-          left={<TextInput.Icon icon="lock" />}
+          error={errors.password}
         />
+        
         <Button
           mode="contained"
           onPress={handleSignIn}
@@ -216,11 +235,11 @@ export default function SignIn() {
         >
           没有账号？注册一个
         </Text>
-          <Link href="/(tabs)/home" style={styles.registerLink}>
+          {/* <Link href="/(tabs)/home" style={styles.registerLink}>
           <Text >测试，跳转主页</Text>
           
             
-          </Link>
+          </Link> */}
         {/* <Button onPress={() => handleSnapPress(0)}>测试</Button> */}
 
         {/* 控制弹窗 */}
@@ -228,27 +247,10 @@ export default function SignIn() {
 
         {/* </Link> */}
       </KeyboardAvoidingView>
+
       {visible && (
-        // <Animated.View
-        //   style={[styles.overlay, animatedStyle]}
-        //   pointerEvents={visible ? "none" : "none"}
-        // >
-        <Pressable style={styles.overlay} onPress={handleClosePress} />
-        // </Animated.View>
-
-        //  <Pressable
-        //   style={styles.overlay}
-        //   onPress={handleClosePress}
-        // />
-
-        // <View>
-        //   <LinearGradient
-        //     colors={["#ffffff", "rgba(0,0,0,0.4)"]}
-        //     style={StyleSheet.absoluteFill}
-        //   />
-        // </View>
-      )}
-
+      <Pressable style={styles.overlay} onPress={handleClosePress} />
+    )}
       <BottomSheet
         ref={sheetRef}
         snapPoints={snapPoints}
@@ -264,7 +266,9 @@ export default function SignIn() {
       >
         <RegisterForm onSubmit={handleClosePress} isFull={isSheetFull}/>
       </BottomSheet>
+
     </Surface>
+    
   );
 }
 
@@ -281,18 +285,16 @@ const styles = StyleSheet.create({
   title: {
     textAlign: "center",
     marginBottom: 30,
-  },
-  input: {
-    marginBottom: 20,
+    fontWeight: "bold",
   },
   button: {
-    marginTop: 10,
+    marginTop: 16,
     paddingVertical: 6,
+    borderRadius: 20,
   },
   registerLink: {
     alignSelf: "center",
-    // alignSelf: 'flex-end',
-    marginTop: 10,
+    marginTop: 16,
   },
   BottomSheet: {
     borderTopLeftRadius: 16,

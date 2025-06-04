@@ -110,6 +110,7 @@ interface PostItem {
   location?: string;
   mood?: string;
   tags?: string[];
+  avatar?: string; // 添加头像字段
 }
 
 
