@@ -16,6 +16,8 @@
     },
     "android": {
       "package": "com.wilhelmaoi.sunotedemo",
+      "buildType": "apk",
+      "gradleCommand": ":app:assembleRelease",
       "permissions": [
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
