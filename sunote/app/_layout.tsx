@@ -6,29 +6,19 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { useAuthStore, useMaskStore, useThemeStore, useNavigationStore } from "../src/context/store";
 import { StatusBar } from "expo-status-bar";
-import { DarkTheme, DefaultTheme, NavigationContainer, ParamListBase, RouteProp } from "@react-navigation/native";
-import {  useColorScheme } from "react-native";
+import { useColorScheme } from "react-native";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
-import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import CustomDrawerContent from "../src/components/CustomDrawerContent";
 import { Dimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { initDatabase } from "../src/database/sqlite"; // 导入初始化数据库函数
+import { getToken } from "../src/context/secureStore";
+import { Drawer } from "expo-router/drawer";
+import CustomDrawerContent from "../src/components/CustomDrawerContent";
 
-const Drawer = createDrawerNavigator();
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // SplashScreen.preventAutoHideAsync();
-
-// 定义路由组件
-function TabsScreen() {
-  return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="(tabs)" /></Stack>;
-}
-
-function SignInScreen() {
-  return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="sign-in" options={{ presentation: "modal" }} /></Stack>;
-}
 
 function AppContent() {
   const theme = useTheme();
@@ -48,49 +38,65 @@ function AppContent() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-
-      
-      <Drawer.Navigator
-        drawerContent={(props: DrawerContentComponentProps) => <CustomDrawerContent {...props} />}
-        screenOptions={({ route }: { route: RouteProp<ParamListBase, keyof ParamListBase> }) => {
-          const swipeEnabledScreens = ['hot', 'sub'];
-          const isSwipeEnabled = swipeEnabledScreens.includes(currentTab);
-
-          return {
-            headerShown: false,
-            drawerStyle: {
-              backgroundColor: theme.colors.background,
-              width: SCREEN_WIDTH * 0.8,
-              borderTopRightRadius: 0,
-              borderBottomRightRadius: 0,
-            },
-            drawerType: "front",
-            overlayColor: 'rgba(0,0,0,0.5)',
-            swipeEnabled: isSwipeEnabled,
-            swipeEdgeWidth: isSwipeEnabled ? 30 : 0,
-            drawerPosition: "left",
-            drawerStatusBarAnimation: "slide",
-          };
+      <Drawer
+        drawerContent={(props) => <CustomDrawerContent {...props} />}
+        screenOptions={{
+          headerShown: false,
+          drawerStyle: {
+            backgroundColor: theme.colors.background,
+            width: SCREEN_WIDTH * 0.8,
+          },
+          drawerType: "front",
+          overlayColor: 'rgba(0,0,0,0.5)',
+          swipeEnabled: true,
+          swipeEdgeWidth: 30,
+          drawerPosition: "left",
+          drawerStatusBarAnimation: "slide",
         }}
       >
         <Drawer.Screen 
-          name="tabs" 
-          component={TabsScreen}
+          name="(tabs)" 
           options={{
             drawerLabel: "主页",
             swipeEnabled: true,
           }}
         />
         <Drawer.Screen 
-          name="signin" 
-          component={SignInScreen}
+          name="sign-in" 
           options={{
             drawerLabel: "登录",
             swipeEnabled: false,
           }}
         />
-      </Drawer.Navigator>
-
+        <Drawer.Screen 
+          name="register" 
+          options={{
+            drawerLabel: "注册",
+            swipeEnabled: false,
+          }}
+        />
+        <Drawer.Screen 
+          name="sponsor" 
+          options={{
+            drawerLabel: "赞助",
+            swipeEnabled: false,
+          }}
+        />
+        <Drawer.Screen 
+          name="(screen)" 
+          options={{
+            drawerLabel: "其他页面",
+            swipeEnabled: false,
+          }}
+        />
+        <Drawer.Screen 
+          name="chat" 
+          options={{
+            drawerLabel: "聊天",
+            swipeEnabled: false,
+          }}
+        />
+      </Drawer>
     </GestureHandlerRootView>
   );
 }
@@ -105,7 +111,6 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <NavigationContainer theme={mode === "dark" ? DarkTheme : DefaultTheme}>
       <SafeAreaView style={{ flex: 1,backgroundColor:theme.colors.background  }} edges={['bottom']}>
       <StatusBar
         style={mode === "dark" ? "light" : "dark"}
@@ -116,7 +121,6 @@ export default function RootLayout() {
       </ThemeProvider>
 
       </SafeAreaView>
-    </NavigationContainer>
   );
 }
 

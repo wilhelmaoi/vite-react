@@ -8,5 +8,5 @@ export default function index() {
 //     router.replace('/(tabs)/home'); // 直接跳转，无动画
 //   }, []);
 
-  return <Redirect href="/(tabs)/home" />;; 
+  return <Redirect href="/(tabs)/home" />; 
 }

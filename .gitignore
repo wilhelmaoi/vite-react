@@ -3,3 +3,6 @@ node_modules/
 *.sql
 web-next/yarn.lock
 .vscode/
+*.log
+*.md
+*.pdf

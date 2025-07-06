@@ -161,6 +161,12 @@ export default function Mine() {
             onPress={handleLogout}
             left={() => <List.Icon icon="logout" />}
           />
+          <List.Item
+            title="测试"
+            description="测试"
+            onPress={() => router.push('/sponsor')}
+            left={() => <List.Icon icon="test" />}
+          />
         </List.Section>
         
         {/* 头像预览模态框 */}

@@ -1,21 +1,18 @@
 import React from "react";
-import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { DrawerContentScrollView } from "@react-navigation/drawer";
+import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { Avatar, Card, Text, IconButton } from "react-native-paper";
 import { useTheme } from "../theme/ThemeContext";
 import { AntDesign } from "@expo/vector-icons";
-import { Link, useRouter } from "expo-router";
-import { DrawerContentComponentProps } from "@react-navigation/drawer";
-import { DrawerActions, useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { useFonts } from "expo-font";
 import { useAuthStore, useThemeStore } from "../context/store";
+import { DrawerContentComponentProps } from "@react-navigation/drawer";
+import { DrawerActions, useNavigation } from "@react-navigation/native";
 
-export default function CustomDrawerContent(
-  props: DrawerContentComponentProps
-) {
+export default function CustomDrawerContent(props: DrawerContentComponentProps) {
   const theme = useTheme();
-  const navigation = useNavigation();
   const router = useRouter();
+  const navigation = useNavigation();
   const { user, avatarUri } = useAuthStore();
   const { mode, toggleTheme } = useThemeStore();
 
@@ -24,22 +21,20 @@ export default function CustomDrawerContent(
   });
   if (!fontsLoaded) return null; // 字体没加载好时不渲染
 
-  // 关闭抽屉并导航到指定路径
-  const navigateAndCloseDrawer = (path: string) => {
-    // 关闭抽屉
-    navigation.dispatch(DrawerActions.closeDrawer());
-    // 导航到指定路径
+  // 导航到指定路径并关闭侧边栏
+  const navigateToPath = (path: string) => {
     router.push(path);
+    navigation.dispatch(DrawerActions.closeDrawer());
   };
 
   // 处理扫描二维码
   const handleScanQRCode = () => {
+    router.push("/(screen)/scan-qr-code");
     navigation.dispatch(DrawerActions.closeDrawer());
-    router.push("/scan-qr-code");
   };
 
   return (
-    <DrawerContentScrollView {...props}>
+    <ScrollView {...props} style={[styles.container, { backgroundColor: theme.colors.background }]}>
        {/* 右上角按钮区域 */}
        <View style={styles.headerButtons}>
           <IconButton
@@ -63,7 +58,7 @@ export default function CustomDrawerContent(
        
         <TouchableOpacity
           style={styles.userInfo}
-          onPress={() => navigateAndCloseDrawer("/mine")}
+          onPress={() => navigateToPath("/(tabs)/mine")}
         >
           <Avatar.Image
             source={
@@ -82,10 +77,11 @@ export default function CustomDrawerContent(
           </View>
         </TouchableOpacity>
       </Card>
+      
       {/* 左侧大图标和文字 */}
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => navigateAndCloseDrawer("/sponsor")}
+        onPress={() => navigateToPath("/sponsor")}
       >
         <View
           style={{
@@ -164,7 +160,7 @@ export default function CustomDrawerContent(
       <View style={styles.menuSection}>
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigateAndCloseDrawer("/(tabs)/home")}
+          onPress={() => navigateToPath("/(tabs)/home")}
         >
           <AntDesign name="home" size={24} color={theme.colors.primary} />
           <Text style={[styles.menuText, { color: theme.colors.primary }]}>
@@ -174,7 +170,7 @@ export default function CustomDrawerContent(
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigateAndCloseDrawer("/(screen)/my-collects")}
+          onPress={() => navigateToPath("/(screen)/my-collects")}
         >
           <AntDesign name="star" size={24} color={theme.colors.primary} />
           <Text style={[styles.menuText, { color: theme.colors.primary }]}>
@@ -184,7 +180,7 @@ export default function CustomDrawerContent(
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigateAndCloseDrawer("/settings")}
+          onPress={() => navigateToPath("/settings")}
         >
           <AntDesign name="setting" size={24} color={theme.colors.primary} />
           <Text style={[styles.menuText, { color: theme.colors.primary }]}>
@@ -202,58 +198,46 @@ export default function CustomDrawerContent(
       >
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigateAndCloseDrawer("/sign-in")}
+          onPress={() => navigateToPath("/sign-in")}
         >
-          <AntDesign name="logout" size={24} color={theme.colors.error} />
-          <Text style={[styles.menuText, { color: theme.colors.error }]}>
+          <AntDesign name="logout" size={24} color={theme.colors.primary} />
+          <Text style={[styles.menuText, { color: theme.colors.primary }]}>
             退出登录
           </Text>
         </TouchableOpacity>
       </View>
-    </DrawerContentScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  userSection: {
-    padding: 16,
-    marginTop: 40,
-    borderRadius: 15,
-    // iOS 阴影
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-
-    // Android 阴影
-    elevation: 5,
+  container: {
+    flex: 1,
   },
   headerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    width: '100%',
-    marginBottom: -10,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  userSection: {
+    margin: 16,
+    borderRadius: 12,
+    elevation: 4,
   },
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 20,
+    padding: 16,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 30,
-    // backgroundColor: "#fff"
+    marginRight: 12,
   },
   userTextContainer: {
     flex: 1,
   },
   userName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 4,
   },
@@ -262,21 +246,27 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   menuSection: {
-    flex: 1,
-    paddingTop: 8,
+    marginTop: 20,
+    paddingHorizontal: 16,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    gap: 32,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginBottom: 8,
   },
   menuText: {
     fontSize: 16,
+    marginLeft: 12,
+    fontWeight: "500",
   },
   bottomSection: {
-    paddingVertical: 16,
+    marginTop: "auto",
+    paddingHorizontal: 16,
+    paddingBottom: 20,
     borderTopWidth: 1,
-    marginTop: 8,
+    paddingTop: 20,
   },
 });

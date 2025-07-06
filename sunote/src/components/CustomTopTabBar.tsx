@@ -9,8 +9,8 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "../theme/ThemeContext";
-import { DrawerActions, useNavigation } from "@react-navigation/native";
 import { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
+import { DrawerActions, useNavigation } from "@react-navigation/native";
 
 // 使用更简单的props，避免类型错误
 export default function CustomTopTabBar(props: any) {
