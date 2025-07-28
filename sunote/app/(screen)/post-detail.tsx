@@ -10,7 +10,8 @@ import {
   Platform,
   Keyboard,
   Dimensions,
-  Alert
+  Alert,
+  TextInput as RNTextInput
 } from 'react-native';
 import { 
   Surface, 
@@ -60,7 +61,15 @@ export default function PostDetail() {
   const [userAvatars, setUserAvatars] = useState<Record<string, string>>({});
   const [isFollowed, setIsFollowed] = useState(false);
   
+  // 回复相关状态
+  const [replyingTo, setReplyingTo] = useState<CommentItem | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replySubmitting, setReplySubmitting] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [commentReplies, setCommentReplies] = useState<Record<string, CommentItem[]>>({});
+  
   const scrollViewRef = useRef<ScrollView>(null);
+  const commentInputRef = useRef<RNTextInput>(null);
   
 
   
@@ -498,6 +507,150 @@ export default function PostDetail() {
     }
   };
   
+  // 开始回复评论
+  const handleStartReply = (comment: CommentItem) => {
+    setReplyingTo(comment);
+    setReplyText('');
+    // 滚动到底部输入框并聚焦
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+      commentInputRef.current?.focus();
+    }, 100);
+  };
+  
+  // 取消回复
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+    setReplyText('');
+    // 清空回复文本
+    setReplyText('');
+  };
+  
+  // 提交回复
+  const handleSubmitReply = async () => {
+    if (!replyText.trim() || !username || !id || !replyingTo) return;
+    
+    try {
+      setReplySubmitting(true);
+      console.log(`提交回复: postId=${id}, parentId=${replyingTo.id}, username=${username}`);
+      
+      const response = await request({
+        method: 'POST',
+        url: `/post/${id}/comment/reply`,
+        data: {
+          username,
+          nickname: user?.nickname || username,
+          content: `回复@${replyingTo.nickname}: ${replyText}`,
+          parentId: replyingTo.id,
+          replyToUsername: replyingTo.username,
+          replyToNickname: replyingTo.nickname
+        }
+      });
+      
+      if (response.data.code === 200) {
+        console.log('回复提交成功');
+        const newReply = response.data.data;
+        
+        // 添加头像信息
+        let replyAvatar = '';
+        if (avatarUri) {
+          replyAvatar = avatarUri;
+        } else if (userAvatars[username]) {
+          replyAvatar = userAvatars[username];
+        }
+        
+        const replyWithAvatar = {
+          ...newReply,
+          avatar: replyAvatar
+        };
+        
+        // 更新回复列表
+        const currentReplies = commentReplies[replyingTo.id] || [];
+        setCommentReplies(prev => ({
+          ...prev,
+          [replyingTo.id]: [...currentReplies, replyWithAvatar]
+        }));
+        
+        // 更新头像缓存
+        if (replyAvatar) {
+          setUserAvatars(prev => ({ ...prev, [username]: replyAvatar }));
+        }
+        
+        // 更新评论的回复数
+        setComments(prevComments => 
+          prevComments.map(comment => 
+            comment.id === replyingTo.id 
+              ? { ...comment, replyCount: (comment.replyCount || 0) + 1 }
+              : comment
+          )
+        );
+        
+        setReplyText('');
+        setReplyingTo(null);
+        
+        // 自动展开回复列表
+        setExpandedReplies(prev => new Set([...prev, replyingTo.id]));
+        
+        // 滚动到回复列表
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 300);
+      } else {
+        console.error('发表回复失败:', response.data.msg);
+      }
+    } catch (error) {
+      console.error('发表回复出错:', error);
+    } finally {
+      setReplySubmitting(false);
+    }
+  };
+  
+  // 加载评论的回复
+  const loadCommentReplies = async (commentId: string) => {
+    try {
+      const response = await request({
+        method: 'GET',
+        url: `/post/${id}/comment/${commentId}/replies`,
+      });
+      
+      if (response.data.code === 200) {
+        const replies = response.data.data || [];
+        
+        // 获取回复用户头像
+        if (replies.length > 0) {
+          const usernames = replies.map(reply => reply.username);
+          setTimeout(() => {
+            fetchCommentUserAvatars(usernames);
+          }, 100);
+        }
+        
+        setCommentReplies(prev => ({
+          ...prev,
+          [commentId]: replies
+        }));
+      }
+    } catch (error) {
+      console.error('加载评论回复失败:', error);
+    }
+  };
+  
+  // 切换回复展开状态
+  const toggleReplies = (commentId: string) => {
+    if (expandedReplies.has(commentId)) {
+      setExpandedReplies(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(commentId);
+        return newSet;
+      });
+    } else {
+      setExpandedReplies(prev => new Set([...prev, commentId]));
+      // 如果还没有加载过回复，则加载
+      if (!commentReplies[commentId]) {
+        loadCommentReplies(commentId);
+      }
+    }
+  };
+  
   // 格式化日期
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -543,6 +696,8 @@ export default function PostDetail() {
   // 渲染评论项
   const renderCommentItem = ({ item }: { item: CommentItem }) => {
     const isCurrentUser = item.username === username;
+    const isExpanded = expandedReplies.has(item.id);
+    const replies = commentReplies[item.id] || [];
     
     return (
       <View style={styles.commentItem}>
@@ -574,6 +729,69 @@ export default function PostDetail() {
         </View>
         
         <Text style={styles.commentContent}>{item.content}</Text>
+        
+        {/* 评论操作按钮 */}
+        <View style={styles.commentActions}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => handleStartReply(item)}
+          >
+            <Text style={[styles.actionText, { color: theme.colors.primary }]}>
+              回复
+            </Text>
+          </TouchableOpacity>
+          
+          {/* 显示回复数量 */}
+          {(item.replyCount || 0) > 0 && (
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={() => toggleReplies(item.id)}
+            >
+              <Text style={[styles.actionText, { color: theme.colors.outline }]}>
+                {isExpanded ? '收起' : `查看${item.replyCount}条回复`}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {/* 回复列表 */}
+        {isExpanded && replies.length > 0 && (
+          <View style={styles.repliesContainer}>
+            {replies.map((reply, index) => (
+              <View key={reply.id || index} style={styles.replyItem}>
+                <View style={styles.replyHeader}>
+                  <View style={styles.replyUserInfo}>
+                    {reply.avatar ? (
+                      <Avatar.Image 
+                        size={24}
+                        source={{ uri: reply.avatar }}
+                        style={{ backgroundColor: theme.colors.surfaceVariant }}
+                      />
+                    ) : (
+                      <Avatar.Text 
+                        size={24} 
+                        label={reply.nickname.substring(0, 2).toUpperCase()}
+                        style={{ backgroundColor: theme.colors.primary }}
+                      />
+                    )}
+                    <View style={styles.replyUserText}>
+                      <Text style={[styles.replyUsername, { color: theme.colors.primary }]}>
+                        {reply.nickname}
+                      </Text>
+                      {reply.replyToNickname && (
+                        <Text style={[styles.replyToText, { color: theme.colors.outline }]}>
+                          回复 {reply.replyToNickname}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <Text style={styles.replyTime}>{formatDate(reply.createdAt)}</Text>
+                </View>
+                <Text style={styles.replyContent}>{reply.content}</Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     );
   };
@@ -795,7 +1013,7 @@ export default function PostDetail() {
           </Card>
           
           {/* 评论区 */}
-          <View style={styles.commentsSection}>
+          <Card style={[styles.commentsSection, { backgroundColor: theme.colors.onSecondary }]}>
             <View style={styles.commentsSectionHeader}>
               <Text style={[styles.commentsSectionTitle, { color: theme.colors.onSurface }]}>
                 评论 ({post.commentCount})
@@ -820,10 +1038,11 @@ export default function PostDetail() {
               comments.map((comment, index) => (
                 <React.Fragment key={comment.id || index}>
                   {renderCommentItem({ item: comment })}
+                  <Divider/>
                 </React.Fragment>
               ))
             )}
-          </View>
+          </Card>
         </ScrollView>
         
         {/* 发表评论区 */}
@@ -834,21 +1053,52 @@ export default function PostDetail() {
           }
         ]}>
           <TextInput
+            ref={commentInputRef}
             mode="outlined"
-            placeholder="发表评论..."
-            value={commentText}
-            onChangeText={setCommentText}
-            style={styles.commentTextField}
+            placeholder={replyingTo ? `回复 ${replyingTo.nickname}` : "发表评论..."}
+            value={replyingTo ? replyText : commentText}
+            onChangeText={replyingTo ? setReplyText : setCommentText}
+            style={[
+              styles.commentTextField, 
+              { 
+                backgroundColor: theme.colors.secondaryContainer,
+                borderColor: replyingTo ? theme.colors.primary : undefined,
+                borderWidth: replyingTo ? 2 : undefined
+              }
+            ]}
             outlineStyle={{ borderRadius: 25 }}
             right={
               <TextInput.Icon 
                 icon="send" 
-                onPress={handleSubmitComment}
-                disabled={!commentText.trim() || commentSubmitting}
-                color={commentText.trim() ? theme.colors.primary : theme.colors.outline}
+                onPress={replyingTo ? handleSubmitReply : handleSubmitComment}
+                disabled={
+                  replyingTo
+                    ? !replyText.trim() || replySubmitting
+                    : !commentText.trim() || commentSubmitting
+                }
+                color={
+                  replyingTo
+                    ? replyText.trim() ? theme.colors.primary : theme.colors.outline
+                    : commentText.trim() ? theme.colors.primary : theme.colors.outline
+                }
               />
             }
           />
+          {replyingTo && (
+            <View style={styles.replyStatusContainer}>
+              <Text style={[styles.replyStatusText, { color: theme.colors.primary }]}>
+                正在回复 @{replyingTo.nickname}
+              </Text>
+              <TouchableOpacity 
+                style={styles.cancelReplyButton}
+                onPress={handleCancelReply}
+              >
+                <Text style={[styles.cancelReplyText, { color: theme.colors.outline }]}>
+                  取消
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </KeyboardAvoidingView>
       
@@ -952,7 +1202,6 @@ const styles = StyleSheet.create({
     marginTop: 0,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: 'white',
   },
   commentsSectionHeader: {
     flexDirection: 'row',
@@ -975,8 +1224,8 @@ const styles = StyleSheet.create({
   commentItem: {
     marginVertical: 12,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#eee',
   },
   commentHeader: {
     flexDirection: 'row',
@@ -1002,14 +1251,102 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginLeft: 40,
   },
+  commentActions: {
+    flexDirection: 'row',
+    marginTop: 8,
+    marginLeft: 40,
+  },
+  actionButton: {
+    marginRight: 16,
+  },
+  actionText: {
+    fontSize: 13,
+  },
+  replyInputContainer: {
+    marginTop: 8,
+    marginLeft: 40,
+    marginRight: 8,
+  },
+  replyTextField: {
+    borderRadius: 20,
+    fontSize: 14,
+  },
+  cancelButton: {
+    alignSelf: 'flex-end',
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  cancelText: {
+    fontSize: 12,
+  },
+  replyStatusContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingHorizontal: 8,
+  },
+  replyStatusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  cancelReplyButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  cancelReplyText: {
+    fontSize: 12,
+  },
+  repliesContainer: {
+    marginTop: 8,
+    marginLeft: 40,
+    paddingLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: '#eee',
+  },
+  replyItem: {
+    marginVertical: 6,
+    paddingVertical: 4,
+  },
+  replyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  replyUserInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  replyUserText: {
+    marginLeft: 6,
+  },
+  replyUsername: {
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  replyToText: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  replyTime: {
+    fontSize: 10,
+    opacity: 0.6,
+  },
+  replyContent: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginLeft: 30,
+  },
   commentInput: {
     padding: 8,
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    paddingHorizontal: 12,
+   
+    // paddingHorizontal: 12,
   },
   commentTextField: {
-    backgroundColor: 'white',
     borderRadius: 25,
     fontSize: 15,
   },

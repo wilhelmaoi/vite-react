@@ -123,6 +123,12 @@ interface CommentItem {
   content: string;
   createdAt: string;
   avatar?: string;
+  // 新增回复相关字段
+  parentId?: string;           // 父评论ID
+  replyToUsername?: string;    // 被回复的用户名
+  replyToNickname?: string;    // 被回复的用户昵称
+  replyCount?: number;         // 回复数量
+  likeCount?: number;          // 点赞数量
 }
 
 export type { PostItem, CommentItem };
